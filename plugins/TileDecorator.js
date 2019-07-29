@@ -1,32 +1,21 @@
 
 var tile_decorator = (function() {
     
-    /*var cell2num = c => c.reduce((r, v, i) => r + (v << i), 0);
-    var num2cell = n => {
-        var cell = [];
-        while(n) {
-            cell.push(n % 2);
-            n >>= 1;
-        }
-        return cell;
-    };*/
-    
     var cell2num = c => parseInt(c.map(v => v ? 1 : 0).reverse().join(''), 2);
     var num2cell = n => n.toString(2).split('').map(v => v == '1').reverse();
-    var chk_vnum = n => {
+    var mod_vnum = n => {
         var vnum_msks = [
             [1 << 4, 1 << 4 | 1 << 3 | 1 << 0],
             [1 << 5, 1 << 5 | 1 << 0 | 1 << 1],
             [1 << 6, 1 << 6 | 1 << 1 | 1 << 2],
             [1 << 7, 1 << 7 | 1 << 2 | 1 << 3],
         ];
+        var r = n;
         for(var [e, msk] of vnum_msks) {
             if(!(n & e)) continue;
-            if((n & msk) != msk) {
-                return false;
-            }
+            r |= msk;
         }
-        return true;
+        return r;
     };
     var get_pos_seq = pos => {
         var rel_seq = [
@@ -36,7 +25,23 @@ var tile_decorator = (function() {
         var pos_rm = pos.slice(2);
         return rel_seq.map(rel => [rel[0] + pos[0], rel[1] + pos[1], ...pos_rm]);
     };
-    var SEQ_TILE_TYPES = [...Array((1 << 8) - 1).keys()].filter(n => chk_vnum(n)).reduce((r, v, i) => {r[v] = i; return r}, {});
+    SEQ_TILE_TYPES = ((rng) => {
+        var mod_seq = [];
+        var vnum_seq = {};
+        var vi = 0;
+        for(var i = 0; i < rng; i++) {
+            var mi = mod_vnum(i);
+            mod_seq.push(mi);
+            if(mi == i) {
+                vnum_seq[i] = vi ++;
+            }
+        }
+        console.log(vnum_seq);
+        for(var i = 0; i < rng; i++) {
+            mod_seq[i] = vnum_seq[mod_seq[i]];
+        }
+        return mod_seq;
+    })(1 << 8);
     
     function tile_decorator(map_strr, tiles_base, tiles_range = 48, tiles_page = 1) {
         this._map = map_strr;
@@ -77,7 +82,7 @@ var tile_decorator = (function() {
                 rseq.push(this._get_map_by_cache(cache, rpos) === null);
             }
             var tidx = SEQ_TILE_TYPES[cell2num(rseq)];
-            if(tidx === undefined) continue;
+            if(tidx) tidx++;
             this._map.set_tile(...pos, base + tidx);
         }
         this._map.refresh_map();
