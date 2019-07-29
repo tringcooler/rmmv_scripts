@@ -125,10 +125,14 @@ var map_stirrer = (function() {
         return $gameMap.mapId();
     };
     
+    map_stirrer.prototype.get_tile = function(x, y, z) {
+        var pidx = pos2idx(x, y, z);
+        return mapdata()[pidx];
+    };
+    
     map_stirrer.prototype.set_tile = function(x, y, z, id) {
         var pidx = pos2idx(x, y, z);
-        var midx = mapid();
-        this._ntiles.set(midx, pidx, id);
+        this._ntiles.set(mapid(), pidx, id);
         mapdata()[pidx] = id;
     };
     
