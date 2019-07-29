@@ -11,8 +11,8 @@ var tile_decorator = (function() {
         return cell;
     };*/
     
-    var cell2num = c => parseInt(c.map(v => v ? 1 : 0).join(''), 2);
-    var num2cell = n => n.toString(2).split('').map(v => v == '1');
+    var cell2num = c => parseInt(c.map(v => v ? 1 : 0).reverse().join(''), 2);
+    var num2cell = n => n.toString(2).split('').map(v => v == '1').reverse();
     var chk_vnum = n => {
         var vnum_msks = [
             [1 << 4, 1 << 4 | 1 << 3 | 1 << 0],
@@ -38,7 +38,7 @@ var tile_decorator = (function() {
     };
     var SEQ_TILE_TYPES = [...Array((1 << 8) - 1).keys()].filter(n => chk_vnum(n)).reduce((r, v, i) => {r[v] = i; return r}, {});
     
-    function tile_decorator(map_strr, tiles_base, tiles_range, tiles_page = 1) {
+    function tile_decorator(map_strr, tiles_base, tiles_range = 48, tiles_page = 1) {
         this._map = map_strr;
         this._tbase = tiles_base;
         this._trange = tiles_range;
@@ -74,12 +74,13 @@ var tile_decorator = (function() {
             var rel_pos_seq = get_pos_seq(pos);
             var rseq = [];
             for(var rpos of rel_pos_seq) {
-                rseq.push(this._get_map_by_cache(cache, rpos) !== null);
+                rseq.push(this._get_map_by_cache(cache, rpos) === null);
             }
             var tidx = SEQ_TILE_TYPES[cell2num(rseq)];
             if(tidx === undefined) continue;
             this._map.set_tile(...pos, base + tidx);
         }
+        this._map.refresh_map();
     };
     
     return tile_decorator;
