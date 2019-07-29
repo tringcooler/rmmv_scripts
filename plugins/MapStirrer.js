@@ -38,7 +38,7 @@ var store_pool = (function() {
     };
     
     var _get = function(idxs, pool) {
-        if(idxs.length == 0) {
+        if(idxs.length == 0 || !pool) {
             return undefined;
         } else if(idxs.length == 1) {
             return pool[idxs[0]];
@@ -174,7 +174,7 @@ var map_stirrer = (function() {
             } else if(command == 'auto_off') {
                 var sid = parseInt(args.shift());
                 auto_off(sid);
-            };
+            }
         };
     };
     
