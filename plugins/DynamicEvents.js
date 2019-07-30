@@ -132,6 +132,14 @@ var dynamic_events = (function() {
     };
     var sval = (id, val) => $gameVariables.setValue(parseInt(id), parseInt(val));
     
+    dynamic_events.prototype.epool = function(ev) {
+        if(!ev) return undefined;
+        if(!ev._plugin_dynamic_events_pool) {
+            ev._plugin_dynamic_events_pool = {};
+        }
+        return ev._plugin_dynamic_events_pool;
+    };
+    
     dynamic_events.prototype._hook_plugin = function() {
         var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
         var self = this;
@@ -146,10 +154,7 @@ var dynamic_events = (function() {
             } else if(command == 'this_pool') {
                 var this_ev = g_ev()[this._eventId];
                 if(!this_ev) return;
-                if(!this_ev._plugin_dynamic_events_pool) {
-                    this_ev._plugin_dynamic_events_pool = {};
-                }
-                var epool = this_ev._plugin_dynamic_events_pool;
+                var epool = self.epool(this_ev);
                 var scmd = args.shift();
                 var sargs = args.map(v => gval(v));
                 var sdst = sargs.pop();
