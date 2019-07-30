@@ -112,26 +112,6 @@ var dynamic_events = (function() {
         };
     };
     
-    var _vguess = function(v) {
-        var flt_v = parseFloat(v);
-        if(flt_v == v) {
-            return flt_v
-        } else {
-            return v;
-        }
-    };
-    
-    var gval = function(id) {
-        if(id === undefined) {
-            return undefined;
-        } else if(id[0] == '#') {
-            return $gameVariables.value(parseInt(id.slice(1)));
-        } else {
-            return _vguess(id);
-        }
-    };
-    var sval = (id, val) => $gameVariables.setValue(parseInt(id), parseInt(val));
-    
     dynamic_events.prototype.epool = function(ev) {
         if(!ev) return undefined;
         if(!ev._plugin_dynamic_events_pool) {
@@ -141,35 +121,28 @@ var dynamic_events = (function() {
     };
     
     dynamic_events.prototype._hook_plugin = function() {
-        var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
-        var self = this;
-        Game_Interpreter.prototype.pluginCommand = function(command, args) {
-            _o_plg_cmd.call(this, command, args);
+        plugin_util.hook((command, args, interp) => {
             if(command == 'clone_event') {
-                var id = gval(args.shift());
-                var x = gval(args.shift());
-                var y = gval(args.shift());
-                self.clone_event(id, x, y);
-                self.refresh_events();
+                var id = plugin_util.gval(args.shift());
+                var x = plugin_util.gval(args.shift());
+                var y = plugin_util.gval(args.shift());
+                this.clone_event(id, x, y);
+                this.refresh_events();
             } else if(command == 'this_pool') {
-                var this_ev = g_ev()[this._eventId];
+                var this_ev = g_ev()[interp._eventId];
                 if(!this_ev) return;
-                var epool = self.epool(this_ev);
+                var epool = this.epool(this_ev);
                 var scmd = args.shift();
-                var sargs = args.map(v => gval(v));
+                var sargs = args.map(v => plugin_util.gval(v));
                 var sdst = sargs.pop();
                 if(scmd == 'get') {
-                    var _t = pool_util.get(sargs, epool);
-                    if(isNaN(parseInt(_t))) {
-                        _t = 0;
-                    };
-                    sval(sdst, _t);
+                    plugin_util.sval(sdst, pool_util.get(sargs, epool));
                 } else if(scmd == 'set') {
                     if(sargs.length <= 0) return;
                     return pool_util.set(sargs, epool, sdst);
                 }
             }
-        };
+        });
     };
     
     return dynamic_events;

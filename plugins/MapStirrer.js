@@ -102,6 +102,53 @@ var auto_off = (function() {
     
 })();
 
+var plugin_util = (function() {
+    
+    var _vguess = function(v) {
+        var flt_v = parseFloat(v);
+        if(flt_v == v) {
+            return flt_v
+        } else {
+            return v;
+        }
+    };
+    
+    var gval = function(id) {
+        if(id === undefined) {
+            return undefined;
+        } else if(id[0] == '#') {
+            return $gameVariables.value(parseInt(id.slice(1)));
+        } else {
+            return _vguess(id);
+        }
+    };
+    
+    var sval = function(id, val) {
+        var iid = parseInt(id);
+        if(isNaN(iid)) return;
+        var ival = parseInt(val);
+        if(isNaN(ival)) {
+            ival = 0;
+        }
+        $gameVariables.setValue(iid, ival);
+    };
+    
+    var hook = function(func) {
+        var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
+        Game_Interpreter.prototype.pluginCommand = function(command, args) {
+            _o_plg_cmd.call(this, command, args);
+            return func(command, args, this);
+        };
+    };
+    
+    return {
+        'gval': gval,
+        'sval': sval,
+        'hook': hook,
+    };
+    
+})();
+
 var map_stirrer = (function() {
     
     function map_stirrer() {
@@ -164,31 +211,17 @@ var map_stirrer = (function() {
         };
     };
     
-    var gval = function(id) {
-        if(id[0] == '#') {
-            return $gameVariables.value(parseInt(id.slice(1)));
-        } else {
-            return parseInt(id);
-        }
-    };
-    
     map_stirrer.prototype._hook_plugin = function() {
-        var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
-        var self = this;
-        Game_Interpreter.prototype.pluginCommand = function(command, args) {
-            _o_plg_cmd.call(this, command, args);
+        plugin_util.hook((command, args, interp) => {
             if(command == 'set_tile') {
-                var x = gval(args.shift());
-                var y = gval(args.shift());
-                var z = gval(args.shift());
-                var id = gval(args.shift());
-                self.set_tile(x, y, z, id);
-                self.refresh_map();
-            } else if(command == 'auto_off') {
-                var sid = parseInt(args.shift());
-                auto_off(sid);
+                var x = plugin_util.gval(args.shift());
+                var y = plugin_util.gval(args.shift());
+                var z = plugin_util.gval(args.shift());
+                var id = plugin_util.gval(args.shift());
+                this.set_tile(x, y, z, id);
+                this.refresh_map();
             }
-        };
+        });
     };
     
     return map_stirrer;
