@@ -84,19 +84,20 @@ var gkey_event = (function() {
         return [sw_id, n_ac];
     };
     
-    gkey_event.prototype._key_up = function(press) {
-        var is_up = false;
-        if(this._last_press && !press) {
-            is_up = true;
+    gkey_event.prototype._key_press = function() {
+        var press = Input.isPressed('ok');
+        var is_press = false;
+        if(!this._last_press && press) {
+            is_press = true;
         }
         this._last_press = press;
-        return is_up;
+        return is_press;
     };
     
     gkey_event.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'gkey_press') {
-                if(!Input.isTriggered('ok')) return;
+                if(!this._key_press()) return;
                 var vargs = args.map(a => plugin_util.gval(a));
                 var [sw_id, achkr] = ((sw_id, area_id, dir_face = false, prio = 10) => {
                     dir_face = !!dir_face;
