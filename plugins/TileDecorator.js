@@ -25,23 +25,29 @@ var tile_decorator = (function() {
         var pos_rm = pos.slice(2);
         return rel_seq.map(rel => [rel[0] + pos[0], rel[1] + pos[1], ...pos_rm]);
     };
-    SEQ_TILE_TYPES = ((rng) => {
+    SEQ_TILE_TYPES = (() => {
         var mod_seq = [];
         var vnum_seq = {};
         var vi = 0;
-        for(var i = 0; i < rng; i++) {
-            var mi = mod_vnum(i);
-            mod_seq.push(mi);
-            if(mi == i) {
-                vnum_seq[i] = vi ++;
+        var h4seq = [0, 1, 2, 4, 8, 5, 10, 3, 6, 12, 9, 7, 11, 13, 14, 15];
+        var l4rng = 1 << 4;
+        var rng = 1 << 8;
+        for(var h4i of h4seq) {
+            for(var l4i = 0; l4i < l4rng; l4i++) {
+                var i = (h4i << 4 | l4i);
+                var mi = mod_vnum(i);
+                mod_seq[i] = mi;
+                if(mi == i) {
+                    vnum_seq[i] = vi ++;
+                }
             }
         }
-        console.log(vnum_seq);
+        console.log(Object.keys(vnum_seq).reduce((r, k) => {r[parseInt(k).toString(2)] = vnum_seq[k]; return r}, {}));
         for(var i = 0; i < rng; i++) {
             mod_seq[i] = vnum_seq[mod_seq[i]];
         }
         return mod_seq;
-    })(1 << 8);
+    })();
     
     function tile_decorator(map_strr, tiles_base, tiles_range = 48, tiles_page = 1) {
         this._map = map_strr;
@@ -82,7 +88,6 @@ var tile_decorator = (function() {
                 rseq.push(this._get_map_by_cache(cache, rpos) === null);
             }
             var tidx = SEQ_TILE_TYPES[cell2num(rseq)];
-            if(tidx) tidx++;
             this._map.set_tile(...pos, base + tidx);
         }
         this._map.refresh_map();
