@@ -133,6 +133,15 @@ var plugin_util = (function() {
         $gameVariables.setValue(iid, ival);
     };
     
+    var sw = function(id, s = null) {
+        var iid = parseInt(id);
+        if(isNaN(iid)) return false;
+        if(s !== null) {
+            $gameSwitches.setValue(id, !!s);
+        }
+        return $gameSwitches.value(id);
+    };
+    
     var hook = function(func) {
         var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
         Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -144,6 +153,7 @@ var plugin_util = (function() {
     return {
         'gval': gval,
         'sval': sval,
+        'sw': sw,
         'hook': hook,
     };
     

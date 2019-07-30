@@ -120,6 +120,12 @@ var dynamic_events = (function() {
         return ev._plugin_dynamic_events_pool;
     };
     
+    dynamic_events.prototype.this_epool = function(interp) {
+        var this_ev = g_ev()[interp._eventId];
+        if(!this_ev) return undefined;
+        return this.epool(this_ev);
+    };
+    
     dynamic_events.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'clone_event') {
@@ -129,9 +135,8 @@ var dynamic_events = (function() {
                 this.clone_event(id, x, y);
                 this.refresh_events();
             } else if(command == 'this_pool') {
-                var this_ev = g_ev()[interp._eventId];
-                if(!this_ev) return;
-                var epool = this.epool(this_ev);
+                var epool = this.this_epool(interp);
+                if(!epool) return;
                 var scmd = args.shift();
                 var sargs = args.map(v => plugin_util.gval(v));
                 var sdst = sargs.pop();
@@ -139,7 +144,7 @@ var dynamic_events = (function() {
                     plugin_util.sval(sdst, pool_util.get(sargs, epool));
                 } else if(scmd == 'set') {
                     if(sargs.length <= 0) return;
-                    return pool_util.set(sargs, epool, sdst);
+                    pool_util.set(sargs, epool, sdst);
                 }
             }
         });
