@@ -112,15 +112,25 @@ var dynamic_events = (function() {
         };
     };
     
+    var _vguess = function(v) {
+        var flt_v = parseFloat(v);
+        if(flt_v == v) {
+            return flt_v
+        } else {
+            return v;
+        }
+    };
+    
     var gval = function(id) {
         if(id === undefined) {
             return undefined;
         } else if(id[0] == '#') {
             return $gameVariables.value(parseInt(id.slice(1)));
         } else {
-            return parseInt(id);
+            return _vguess(id);
         }
     };
+    var sval = (id, val) => $gameVariables.setValue(parseInt(id), parseInt(val));
     
     dynamic_events.prototype._hook_plugin = function() {
         var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
@@ -133,6 +143,26 @@ var dynamic_events = (function() {
                 var y = gval(args.shift());
                 self.clone_event(id, x, y);
                 self.refresh_events();
+            } else if(command == 'this_pool') {
+                var this_ev = g_ev()[this._eventId];
+                if(!this_ev) return;
+                if(!this_ev._plugin_dynamic_events_pool) {
+                    this_ev._plugin_dynamic_events_pool = {};
+                }
+                var epool = this_ev._plugin_dynamic_events_pool;
+                var scmd = args.shift();
+                var sargs = args.map(v => gval(v));
+                var sdst = sargs.pop();
+                if(scmd == 'get') {
+                    var _t = pool_util.get(sargs, epool);
+                    if(isNaN(parseInt(_t))) {
+                        _t = 0;
+                    };
+                    sval(sdst, _t);
+                } else if(scmd == 'set') {
+                    if(sargs.length <= 0) return;
+                    return pool_util.set(sargs, epool, sdst);
+                }
             }
         };
     };

@@ -1,4 +1,36 @@
 
+var pool_util = (function() {
+    
+    var _get = function(idxs, pool) {
+        if(idxs.length == 0 || !pool) {
+            return undefined;
+        } else if(idxs.length == 1) {
+            return pool[idxs[0]];
+        } else {
+            return _get(idxs.slice(1), pool[idxs[0]]);
+        }
+    };
+    
+    var _set = function(idxs, pool, val) {
+        if(idxs.length == 0) {
+            return;
+        } else if(idxs.length == 1) {
+            pool[idxs[0]] = val;
+        } else {
+            if(!pool[idxs[0]]) {
+                pool[idxs[0]] = {};
+            }
+            _set(idxs.slice(1), pool[idxs[0]], val);
+        }
+    };
+    
+    return {
+        'get': _get,
+        'set': _set,
+    };
+    
+})();
+
 var store_pool = (function() {
     
     /*var SP_LIST = [];
@@ -37,37 +69,14 @@ var store_pool = (function() {
         //return this._pool;
     };
     
-    var _get = function(idxs, pool) {
-        if(idxs.length == 0 || !pool) {
-            return undefined;
-        } else if(idxs.length == 1) {
-            return pool[idxs[0]];
-        } else {
-            return _get(idxs.slice(1), pool[idxs[0]]);
-        }
-    };
-    
     store_pool.prototype.get = function(...idxs) {
-        return _get(idxs, this.pool());
-    };
-    
-    var _set = function(idxs, pool, val) {
-        if(idxs.length == 0) {
-            return;
-        } else if(idxs.length == 1) {
-            pool[idxs[0]] = val;
-        } else {
-            if(!pool[idxs[0]]) {
-                pool[idxs[0]] = {};
-            }
-            _set(idxs.slice(1), pool[idxs[0]], val);
-        }
+        return pool_util.get(idxs, this.pool());
     };
     
     store_pool.prototype.set = function(...idxs) {
         var val = idxs.pop();
         if(idxs.length <= 0) return;
-        return _set(idxs, this.pool(), val);
+        return pool_util.set(idxs, this.pool(), val);
     };
     
     return store_pool;
