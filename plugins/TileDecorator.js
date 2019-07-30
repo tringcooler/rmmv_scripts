@@ -25,7 +25,7 @@ var tile_decorator = (function() {
         var pos_rm = pos.slice(2);
         return rel_seq.map(rel => [rel[0] + pos[0], rel[1] + pos[1], ...pos_rm]);
     };
-    SEQ_TILE_TYPES = (() => {
+    var SEQ_TILE_TYPES = (() => {
         var mod_seq = [];
         var vnum_seq = {};
         var vi = 0;
@@ -42,7 +42,6 @@ var tile_decorator = (function() {
                 }
             }
         }
-        console.log(Object.keys(vnum_seq).reduce((r, k) => {r[parseInt(k).toString(2)] = vnum_seq[k]; return r}, {}));
         for(var i = 0; i < rng; i++) {
             mod_seq[i] = vnum_seq[mod_seq[i]];
         }
@@ -77,7 +76,7 @@ var tile_decorator = (function() {
         return c[plst];
     };
     
-    tile_decorator.prototype.decorate = function(pos_seq) {
+    tile_decorator.prototype._decorate = function(pos_seq) {
         var cache = {};
         for(var pos of pos_seq) {
             var base = this._get_map_by_cache(cache, pos);
@@ -91,6 +90,27 @@ var tile_decorator = (function() {
             this._map.set_tile(...pos, base + tidx);
         }
         this._map.refresh_map();
+    };
+    
+    tile_decorator.prototype.decorate = function(...args) {
+        var pos_seq = [];
+        if(args.length > 1) {
+            var pos = args[0];
+            var siz = args[1];
+            for(var y = 0; y < siz[1]; y++) {
+                for(var x = 0; x < siz[0]; x++) {
+                    pos_seq.push([pos[0] + x, pos[1] + y, pos[2]]);
+                }
+            }
+        } else {
+            if(!(args[0] instanceof Array)) return;
+            if(args[0][0] instanceof Array) {
+                pos_seq = args[0];
+            } else {
+                pos_seq = [args[0]];
+            }
+        }
+        return this._decorate(pos_seq);
     };
     
     return tile_decorator;
