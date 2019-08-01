@@ -62,7 +62,7 @@ var tile_maker = (function() {
             }
         };
         
-        area_pool.prototype.merge = function(bot, bpos = null) {
+        area_pool.prototype.merge_to = function(bot, bpos = null) {
             if(bpos === null) {
                 bpos = [0, 0];
             }
