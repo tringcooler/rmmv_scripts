@@ -3,8 +3,8 @@ var tile_maker = (function() {
 
     var TYPA = {
         none: 0x00,
-        port: 0x01,
-        land: 0x02,
+        land: 0x01,
+        port: 0x02,
         wall: 0x03,
         cent: 0x04,
         msk_base: 0x03,
