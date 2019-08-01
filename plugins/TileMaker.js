@@ -26,6 +26,34 @@ var tile_maker = (function() {
     var TYPE = {
         
     };
+    
+    var area_pool = (function() {
+        
+        function area_pool() {
+            this._pool = {};
+        }
+        
+        area_pool.prototype.set = function(pos, area) {
+            var src = pool_util.get(pos, this._pool);
+            if(!src) src = 0;
+            var dst = a_ow(src, area);
+            pool_util.set(pos, this._pool, dst);
+        };
+        
+        area_pool.prototype.each = function(cb, aflags) {
+            for(var rx in this._pool) {
+                for(var ry in this._pool[rx]) {
+                    var area = this._pool[rx][ry];
+                    if(!(area & aflags)) continue;
+                    var r = cb(rx, ry, area);
+                    if(r === false) break;
+                }
+            }
+        };
+        
+        return area_pool;
+        
+    })();
 
     var tile_unit = (function() {
         
@@ -37,17 +65,6 @@ var tile_maker = (function() {
         tile_unit.prototype.parse = function(code) {
             this._events = c2e(code);
             
-        };
-        
-        tile_unit.prototype.each = function(cb, aflags) {
-            for(var rx in this._apool) {
-                for(var ry in this._apool[rx]) {
-                    var area = this._apool[rx][ry];
-                    if(!(area & aflags)) continue;
-                    var r = cb(rx, ry, area);
-                    if(r === false) break;
-                }
-            }
         };
         
         return tile_unit;
