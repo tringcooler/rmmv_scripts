@@ -5,13 +5,13 @@ var tile_maker = (function() {
         none: 0x00,
         port: 0x01,
         land: 0x02,
-        wall: 0x04,
-        cent: 0x10,
-        msk_base: 0x0f,
-        msk_extr: 0xf0,
+        wall: 0x03,
+        cent: 0x04,
+        msk_base: 0x03,
+        msk_extr: 0x0a,
     };
     
-    var a_ow = (bot, top) => (v => (v & TYPA.msk_extr) | Math.max(v & TYPA.port, v & TYPA.land, v & TYPA.wall))(bot | top);
+    var a_ow = (bot, top) => ((bot | top) & TYPA.msk_extr) | Math.max(bot & TYPA.msk_base, top & TYPA.msk_base);
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
