@@ -15,6 +15,10 @@ var dynamic_events = (function() {
         return $gameMap._events;
     };
     
+    var a_ev = function() {
+        return $gameMap.events();
+    };
+    
     var mapid = function() {
         return $gameMap.mapId();
     };
@@ -75,6 +79,7 @@ var dynamic_events = (function() {
     
     dynamic_events.prototype.del_event = function(de_idx) {
         if(g_ev()[de_idx]) {
+            g_ev()[de_idx].erase();
             delete g_ev()[de_idx];
         }
         if(d_ev()[de_idx]) {
@@ -130,6 +135,15 @@ var dynamic_events = (function() {
         var tar_ev = g_ev()[ge_id];
         if(!tar_ev.page()) return;
         interp.setupChild(tar_ev.list(), ge_id);
+    };
+    
+    var ev_in_pos = (ev, pos) => ev.x == pos[0] && ev.y == pos[1] && (pos[2] === undefined || ev._priorityType == pos[2]);
+    var ev_in_rng = (ev, rng) => rng.length > 1 ? rng.some(pos => ev_in_pos(ev, pos)) : ev_in_pos(ev, rng[0]);
+    dynamic_events.prototype.events_in_range = function(...rng) {
+        return a_ev().filter(ev => ev_in_rng(ev, rng));
+    };
+    dynamic_events.prototype.range_has_event = function(...rng) {
+        return a_ev().some(ev => ev_in_rng(ev, rng));
     };
     
     dynamic_events.prototype._hook_plugin = function() {

@@ -1,8 +1,9 @@
 
 var area_checker = (function() {
     
-    function area_checker(map_strr, area_id, dir_face = false, ev_pass = true) {
+    function area_checker(map_strr, dyn_evs, area_id, dir_face = false, ev_pass = true) {
         this._map = map_strr;
+        this._evs = dyn_evs;
         this._area = area_id;
         this._dface = dir_face;
         this._epass = ev_pass;
@@ -36,23 +37,20 @@ var area_checker = (function() {
         var ppos = [p_ch().x, p_ch().y];
         var pdir = p_ch().direction();
         if(this._dface) {
-            return face_pos(ppos, pdir);
+            var tpos = face_pos(ppos, pdir);
+            return [tpos, [tpos.concat(1), ppos.concat(0)]];
         } else {
-            return ppos;
+            return [ppos, [ppos.concat(0)]];
         }
     };
     
-    var a_ev = function() {
-        return $gameMap.events();
-    };
-    
     area_checker.prototype.check = function() {
-        var t_pos = this._tar_pos();
+        var [t_pos, ev_rng] = this._tar_pos();
         var t_area = this._get_area(...t_pos);
         if(t_area != this._area) return false;
         if(t_area != this._area
             || (this._epass
-            && a_ev().some(ev => ev.x == t_pos[0] && ev.y == t_pos[1]) ) ) {
+            && this._evs.range_has_event(...ev_rng) ) ) {
             return false;
         }
         return t_pos;
@@ -79,7 +77,7 @@ var gkey_event = (function() {
                 return [_tev, _tac];
             }
         }
-        var n_ac = new area_checker(this._map, area_id, dir_face, prio >= 0);
+        var n_ac = new area_checker(this._map, this._evs, area_id, dir_face, prio >= 0);
         this._tpool[ac_key] = [prio, sw_id, n_ac];
         return [sw_id, n_ac];
     };
