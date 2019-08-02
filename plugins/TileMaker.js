@@ -100,18 +100,24 @@ var tile_maker = (function() {
         };
         
         tile_unit.prototype.set_port = function() {
-            this._apool.set([-2, 0], TYPA.port);
-            this._apool.set([0, -2], TYPA.port);
-            this._apool.set([2, 0], TYPA.port);
-            this._apool.set([0, 2], TYPA.port);
+            this._apool.set([-2, 0], TYPA.slot);
+            this._apool.set([0, -2], TYPA.slot);
+            this._apool.set([2, 0], TYPA.slot);
+            this._apool.set([0, 2], TYPA.slot);
+            this._apool.set([-1, 0], TYPA.port);
+            this._apool.set([0, -1], TYPA.port);
+            this._apool.set([1, 0], TYPA.port);
+            this._apool.set([0, 1], TYPA.port);
+            
         };
         
         tile_unit.prototype.set_land = function() {
             for(var x = -1; x < 2; x++) {
                 for(var y = -1; y < 2; y++) {
-                    this._apool.set([x, y], TYPA.land);
+                    this._apool.set([x, y], TYPA.roof);
                 }
             }
+            this._apool.set([0, 0], TYPA.roof);
         };
         
         tile_unit.prototype.set_wall = function(cw) {
