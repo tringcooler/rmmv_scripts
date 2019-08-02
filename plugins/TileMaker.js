@@ -29,6 +29,17 @@ var tile_maker = (function() {
         msk_evnt: 0xff00,
     };
     
+    var c_wall_msk2pos = {
+        0x1: [-1, 0],
+        0x3: [-1, -1],
+        0x2: [0, -1],
+        0x6: [1, -1],
+        0x4: [1, 0],
+        0xa: [1, 1],
+        0x8: [0, 1],
+        0x9: [-1, 1],
+    };
+    
     var e_c2a = (c, a) => (c & TYPC.msk_evnt) | (a & TYPA.msk_area);
     
     var TYPE = {
@@ -83,17 +94,6 @@ var tile_maker = (function() {
             this.setup(code);
         }
         
-        var wall_msk2pos = {
-            0x1: [-1, 0],
-            0x3: [-1, -1],
-            0x2: [0, -1],
-            0x6: [1, -1],
-            0x4: [1, 0],
-            0xa: [1, 1],
-            0x8: [0, 1],
-            0x9: [-1, 1],
-        };
-        
         tile_unit.prototype.set_port = function() {
             this._apool.set([-2, 0], TYPA.slot);
             this._apool.set([0, -2], TYPA.slot);
@@ -116,9 +116,9 @@ var tile_maker = (function() {
         };
         
         tile_unit.prototype.set_wall = function(cw) {
-            for(var wm in wall_msk2pos) {
+            for(var wm in c_wall_msk2pos) {
                 if(wm & cw) {
-                    this._apool.set(wall_msk2pos[wm], TYPA.wall);
+                    this._apool.set(c_wall_msk2pos[wm], TYPA.wall);
                 }
             }
         };
@@ -140,16 +140,94 @@ var tile_maker = (function() {
         
     })();
     
-    var tile_graph = (function() {
+    var dye_chain = (function() {
+        
+        var _ID = 0;
+        
+        function dye_chain() {
+            this._prev = null;
+            this._id = ++_ID;
+            this._val = null;
+        }
+        
+        dye_chain.prototype.base = function() {
+            var base = this;
+            while(base._prev) {
+                base = base._prev;
+            }
+            return base;
+        };
+        
+        dye_chain.prototype.id = function() {
+            return this.base()._id;
+        };
+        
+        dye_chain.prototype.val = function(v = null) {
+            var base = this.base();
+            if(v !== null) {
+                base._val = v;
+            }
+            return base._val;
+        };
+        
+        dye_chain.prototype.dye_by = function(src) {
+            var base = this.base();
+            var sbase = src.base();
+            if(base === sbase) return;
+            base._prev = sbase;
+            base._val = null;
+        };
+        
+        return dye_chain;
         
     })();
 
     var tile_inner = (function() {
+        
+        function tile_inner() {
+            this._cpool = {};
+        }
+        
+        tile_inner.prototype._ginfo = function(pos) {
+            return pool_util.get(pos, this._cpool);
+        };
+        
+        tile_inner.prototype._dye = function(pos) {
+            var sinfo = this._ginfo(pos);
+            if(!sinfo) return;
+            var [scode, sdc] = sinfo;
+            for(var dir = 0; dir < 4; dir++) {
+                var wm = 1 << dir;
+                if(scode & wm) continue;
+                var rwm = 1 << ((dir + 2) % 4) ;
+                var dpos = posadd(pos, c_wall_msk2pos[wm]);
+                var dinfo = this._ginfo(dpos);
+                if(!dinfo) {
+                    sdc.val().conn += 1;
+                    continue;
+                }
+                var [dcode, ddc] = dinfo;
+                if(dcode & rwm) continue;
+                sdc.val().conn += ddc.val().conn - 1;
+                ddc.dye_by(sdc);
+            }
+        };
+        
+        tile_inner.prototype.set_unit = function(pos, code) {
+            if(this._ginfo(pos)) return;
+            var dc = new dye_chain();
+            dc.val({conn: 0});
+            pool_util.set(pos, this._cpool, [code, dc]);
+            this._dye(pos);
+        };
+        
+        return tile_inner;
+        
     })();
 
     var tile_inter = (function() {
     })();
     
-    return tile_unit;
+    return tile_inner;
 
 })();

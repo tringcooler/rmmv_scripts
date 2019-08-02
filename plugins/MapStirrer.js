@@ -24,13 +24,13 @@ var pool_util = (function() {
         }
     };
     
-    var _each = function(pool, cb, path = null) {
+    var _each = function(pool, cb, deep = -1, path = null) {
         if(path === null) {
             path = [];
         }
-        if(pool instanceof Object) {
+        if(deep != 0 && pool instanceof Object) {
             for(var k in pool) {
-                var r = _each(pool[k], cb, [k].concat(path));
+                var r = _each(pool[k], cb, deep - 1, [k].concat(path));
                 if(r === false) {
                     return false;
                 } else if(r !== undefined) {
