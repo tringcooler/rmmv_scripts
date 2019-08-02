@@ -10,6 +10,7 @@ var tile_maker = (function() {
         slot: 0x08,
         cent: 0x10,
         msk_base: 0x03,
+        msk_port: 0x0c,
         msk_extr: 0x1c,
         msk_offs: 0xe0,
         msk_area: 0xff,
@@ -54,18 +55,12 @@ var tile_maker = (function() {
         };
         
         area_pool.prototype.each = function(cb, ...filters) {
-            for(var rx in this._pool) {
-                for(var ry in this._pool[rx]) {
-                    var area = this._pool[rx][ry];
-                    if(filter.length > 0 && !filters.some(f => f(area))) continue;
-                    var r = cb(rx, ry, area);
-                    if(r === false) {
-                        break;
-                    } else if(r !== undefined) {
-                        this._pool[rx][ry] = r;
-                    }
-                }
-            }
+            pool_util.each(this._pool, (kx, ky, area) => {
+                var rx = parseInt(kx);
+                var ry = parseInt(ky);
+                if(filters.length > 0 && !filters.every(f => f(area))) return;
+                return cb(rx, ry, area);
+            });
         };
         
         area_pool.prototype.merge_to = function(bot, bpos = null) {
@@ -135,7 +130,6 @@ var tile_maker = (function() {
         };
         
         tile_unit.prototype.setup = function(code) {
-            this._events = c2e(code);
             this.set_port();
             this.set_land();
             this.set_wall(code);
@@ -145,11 +139,17 @@ var tile_maker = (function() {
         return tile_unit;
         
     })();
+    
+    var tile_graph = (function() {
+        
+    })();
 
     var tile_inner = (function() {
     })();
 
     var tile_inter = (function() {
     })();
+    
+    return tile_unit;
 
 })();
