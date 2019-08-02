@@ -3,20 +3,22 @@ var tile_maker = (function() {
 
     var TYPA = {
         none: 0x00,
-        land: 0x01,
-        port: 0x02,
+        roof: 0x01,
+        land: 0x02,
         wall: 0x03,
-        cent: 0x04,
+        port: 0x04,
+        slot: 0x08
+        cent: 0x10,
         msk_base: 0x03,
-        msk_extr: 0x0a,
-        msk_offs: 0xf0,
+        msk_extr: 0x1c,
+        msk_offs: 0xe0,
         msk_area: 0xff,
         msk_evnt: 0xff00,
-        msk_ovwr: 0xfffa,
+        msk_ovwr: 0xfffc,
         msk_all: 0xffff,
     };
     
-    var a_ow = (bot, top) => ((bot | top) & TYPA.msk_ovwr) | Math.max(bot & TYPA.msk_base, top & TYPA.msk_base);
+    var a_ow = (bot, top) => ((bot | top) & TYPA.msk_ovwr) | Math.max(bot & TYPA.msk_base, top & TYPA.msk_base, (bot & TYPA.roof) + (top & TYPA.roof));
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
@@ -47,11 +49,15 @@ var tile_maker = (function() {
             pool_util.set(pos, this._pool, dst);
         };
         
-        area_pool.prototype.each = function(cb, aflags = TYPA.msk_all) {
+        area_pool.prototype.filter = function(msk, dst = 0, eq = false) {
+            return a => eq ? ((a & msk) == dst) : ((a & msk) != dst);
+        };
+        
+        area_pool.prototype.each = function(cb, ...filters) {
             for(var rx in this._pool) {
                 for(var ry in this._pool[rx]) {
                     var area = this._pool[rx][ry];
-                    if(!(area & aflags)) continue;
+                    if(filter.length > 0 && !filters.some(f => f(area))) continue;
                     var r = cb(rx, ry, area);
                     if(r === false) {
                         break;
