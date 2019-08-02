@@ -7,7 +7,7 @@ var tile_maker = (function() {
         land: 0x02,
         wall: 0x03,
         port: 0x04,
-        slot: 0x08
+        slot: 0x08,
         cent: 0x10,
         msk_base: 0x03,
         msk_extr: 0x1c,
