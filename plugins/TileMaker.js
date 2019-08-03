@@ -109,10 +109,14 @@ var tile_maker = (function() {
         tile_unit.prototype.set_land = function() {
             for(var x = -1; x < 2; x++) {
                 for(var y = -1; y < 2; y++) {
-                    this._apool.set([x, y], TYPA.roof);
+                    if((x + y) % 2) {
+                        this._apool.set([x, y], TYPA.supp_e);
+                    } else {
+                        this._apool.set([x, y], TYPA.supp_c);
+                    }
                 }
             }
-            this._apool.set([0, 0], TYPA.roof);
+            this._apool.set([0, 0], TYPA.land);
         };
         
         tile_unit.prototype.set_wall = function(cw) {
