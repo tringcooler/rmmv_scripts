@@ -3,23 +3,23 @@ var tile_maker = (function() {
 
     var TYPA = {
         none: 0x00,
-        roof: 0x01,
-        land: 0x02,
-        wall: 0x03,
-        port: 0x04,
-        slot: 0x08,
+        supp_c: 0x01,
+        supp_e: 0x02,
+        land: 0x04,
+        wall: 0x08,
         cent: 0x10,
-        msk_base: 0x03,
-        msk_port: 0x0c,
-        msk_extr: 0x1c,
-        msk_offs: 0xe0,
+        port: 0x20,
+        slot: 0x40,
+        msk_supp: 0x03,
+        msk_terr: 0x0c,
+        msk_port: 0x60,
         msk_area: 0xff,
         msk_evnt: 0xff00,
-        msk_ovwr: 0xfffc,
+        msk_ovwr: 0xfff0,
         msk_all: 0xffff,
     };
     
-    var a_ow = (bot, top) => ((bot | top) & TYPA.msk_ovwr) | Math.max(bot & TYPA.msk_base, top & TYPA.msk_base, (bot & TYPA.roof) + (top & TYPA.roof));
+    var a_ow = (bot, top) => ((bot | top) & TYPA.msk_ovwr) | Math.max(bot & TYPA.msk_terr, top & TYPA.msk_terr, Math.min((bot & TYPA.msk_supp) + (top & TYPA.msk_supp), TYPA.land));
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
