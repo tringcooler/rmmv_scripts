@@ -226,9 +226,10 @@ var tile_maker = (function() {
                 }
                 var [dcode, ddc] = dinfo;
                 var dconn = !(dcode & rwm);
+                var sdconn = sdc.is_conn(ddc);
                 if(!sconn && dconn) {
                     ddc.val().conn -= 1;
-                    if(!sdc.is_conn(ddc)) {
+                    if(!sdconn) {
                         if(ddc.val().conn <= 0) {
                             valid = false;
                             invalid_walls.every.push(wm);
@@ -237,7 +238,7 @@ var tile_maker = (function() {
                         }
                     }
                 } else if(sconn && dconn) {
-                    if(sdc.is_conn(ddc)) {
+                    if(sdconn) {
                         sdc.val().conn -= 1;
                     } else {
                         sdc.val().conn += ddc.val().conn - 1;
