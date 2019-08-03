@@ -248,7 +248,7 @@ var tile_maker = (function() {
             if(sdc.val().conn <= 0) {
                 valid = false;
             } else {
-                invalid_walls.some = [];
+                invalid_walls.some = null;
             }
             return valid ? null : invalid_walls;
         };
@@ -312,6 +312,10 @@ var tile_maker = (function() {
         show();
         r = ti.set_unit([2, 1], 0xe);
         show();
+        ti.reset(2);
+        show();
+        r = ti.set_unit([0, 1], 0xd);
+        show();
         ti.reset(null);
         console.log('=====');
         r = ti.set_unit([0, 0], 0x3);
@@ -331,6 +335,12 @@ var tile_maker = (function() {
         r = ti.set_unit([-1, 1], 0x9);
         show();
         r = ti.set_unit([-1, 0], 0x0);
+        show();
+        r = ti.set_unit([0, 0], 0xe);
+        show();
+        ti.reset(2);
+        console.log('-----');
+        r = ti.set_unit([-1, 0], 0x1);
         show();
         r = ti.set_unit([0, 0], 0xe);
         show();
