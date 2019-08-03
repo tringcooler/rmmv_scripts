@@ -174,6 +174,10 @@ var tile_maker = (function() {
             return base._val;
         };
         
+        dye_chain.prototype.is_conn = function(dst) {
+            return this.base() === dst.base();
+        };
+        
         dye_chain.prototype.dye_by = function(src) {
             var base = this.base();
             var sbase = src.base();
@@ -199,6 +203,10 @@ var tile_maker = (function() {
         
         tile_inner.prototype._dye = function(pos) {
             var valid = true;
+            var invalid_walls = {
+                every: [],
+                some: [],
+            };
             var sinfo = this._ginfo(pos);
             if(!sinfo) return;
             var [scode, sdc] = sinfo;
@@ -211,15 +219,24 @@ var tile_maker = (function() {
                 if(!dinfo) {
                     if(sconn) {
                         sdc.val().conn += 1;
+                    } else {
+                        invalid_walls.some.push(wm);
                     }
                     continue;
                 }
                 var [dcode, ddc] = dinfo;
                 var dconn = !(dcode & rwm);
-                if(!sconn && dconn) {
+                if(sdc.is_conn(ddc)) {
+                    
+                    //TODO
+                    
+                } else if(!sconn && dconn) {
                     ddc.val().conn -= 1;
                     if(ddc.val().conn <= 0) {
                         valid = false;
+                        invalid_walls.every.push(wm);
+                    } else {
+                        invalid_walls.some.push(wm);
                     }
                 } else if(sconn && dconn) {
                     sdc.val().conn += ddc.val().conn - 1;
@@ -228,8 +245,10 @@ var tile_maker = (function() {
             }
             if(sdc.val().conn <= 0) {
                 valid = false;
+            } else {
+                invalid_walls.some = [];
             }
-            return valid;
+            return valid ? invalid_walls : null;
         };
         
         tile_inner.prototype.set_unit = function(pos, code) {
