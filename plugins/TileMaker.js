@@ -226,16 +226,15 @@ var tile_maker = (function() {
                 }
                 var [dcode, ddc] = dinfo;
                 var dconn = !(dcode & rwm);
-                if(sdc.is_conn(ddc)) {
-                    continue;
-                }
                 if(!sconn && dconn) {
                     ddc.val().conn -= 1;
-                    if(ddc.val().conn <= 0) {
-                        valid = false;
-                        invalid_walls.every.push(wm);
-                    } else {
-                        invalid_walls.some.push(wm);
+                    if(!sdc.is_conn(ddc)) {
+                        if(ddc.val().conn <= 0) {
+                            valid = false;
+                            invalid_walls.every.push(wm);
+                        } else {
+                            invalid_walls.some.push(wm);
+                        }
                     }
                 } else if(sconn && dconn) {
                     sdc.val().conn += ddc.val().conn - 1;
