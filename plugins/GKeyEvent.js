@@ -100,21 +100,22 @@ var gkey_event = (function() {
         return sdir;
     };
     
-    gkey_event.prototype._key_press_dir = function(suc = false) {
+    gkey_event.prototype._dir_press = function(suc = false) {
         var key = p_dir();
         if(!key) return false;
         var is_pressed = this._key_press(key, suc);
         if(suc) return is_pressed;
         var dir = is_pressed ? key : null;
-        if(dir && this._last_dir != dir) {
-            this._last_dir = dir;
-        }
         var dir_is_pressed = false;
-        if($gamePlayer.checkStop(1) && !dir) {
-            if(this._last_dir == key) {
-                dir_is_pressed = true;
+        if($gamePlayer.checkStop(0)) {
+            if(!dir && this._last_dir == key) {
+                dir_is_pressed = 'enter';
+            } else if(dir && !this._last_dir) {
+                dir_is_pressed = 'touch';
             }
             this._last_dir = null;
+        } else if(dir && this._last_dir != dir) {
+            this._last_dir = dir;
         }
         this._suc_press[key] = dir_is_pressed;
         return dir_is_pressed;
@@ -136,29 +137,34 @@ var gkey_event = (function() {
     
     gkey_event.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
+            var sw_id;
+            var achkr = null;
             if(command == 'gkey_press') {
-                var keydir = false;
                 var suc = false;
-                if(args[0] == 'dir') {
-                    args.shift();
-                    keydir = true;
-                }
                 if(args[0] == 'suc') {
                     args.shift();
                     suc = true;
                 }
-                var is_pressed;
-                if(keydir) {
-                    is_pressed = this._key_press_dir(suc);
-                } else {
-                    is_pressed = this._key_press('ok', suc);
-                }
-                if(!is_pressed) return;
+                if(!this._key_press('ok', suc)) return;
                 var vargs = args.map(a => plugin_util.gval(a));
-                var [sw_id, achkr] = ((sw_id, area_id, dir_face = false, prio = 10) => {
+                [sw_id, achkr] = ((sw_id, area_id, dir_face = false, prio = 10) => {
                     dir_face = !!dir_face;
-                    return this.trigger(prio, sw_id, area_id, dir_face, !keydir);
+                    return this.trigger(prio, sw_id, area_id, dir_face, true);
                 })(...vargs);
+            } else if(command == 'gkey_dir') {
+                var suc = false;
+                if(args[0] == 'suc') {
+                    args.shift();
+                    suc = true;
+                }
+                var dir_stat = this._dir_press(suc);
+                if(!dir_stat) return;
+                var vargs = args.map(a => plugin_util.gval(a));
+                [sw_id, achkr] = ((sw_id, area_id, prio = 10) => {
+                    return this.trigger(prio, sw_id, area_id, dir_stat == 'touch', false);
+                })(...vargs);
+            }
+            if(achkr) {
                 var t_pos = achkr.check();
                 if(t_pos) {
                     var epool = this._evs.this_epool(interp);
