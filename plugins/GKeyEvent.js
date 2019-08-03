@@ -90,8 +90,12 @@ var gkey_event = (function() {
         return [sw_id, n_ac];
     };
     
+    var p_ch = function() {
+        return $gamePlayer;
+    };
+    
     var p_dir = function() {
-        var pdir = $gamePlayer.direction();
+        var pdir = p_ch().direction();
         var sdir = null;
         if(pdir == 2) {
             sdir = 'down';
@@ -110,8 +114,8 @@ var gkey_event = (function() {
         if(!key) return false;
         var is_pressed = this._key_press(key, suc);
         if(suc) return is_pressed;
-        var pl = $gamePlayer;
-        this._suc_press[key] = is_pressed && pl.checkStop(0) && !pl.canPass(pl._x, pl._y, pl.direction());
+        var pl = p_ch();
+        this._suc_press[key] = (is_pressed && pl.checkStop(0) && !pl.canPass(pl._x, pl._y, pl.direction()));
         return this._suc_press[key];
     }
     
@@ -165,6 +169,8 @@ var gkey_event = (function() {
                     if(epool) {
                         pool_util.set(['gkey_pos', 'x'], epool, t_pos[0]);
                         pool_util.set(['gkey_pos', 'y'], epool, t_pos[1]);
+                        pool_util.set(['gkey_pos', 'px'], epool, p_ch()._x);
+                        pool_util.set(['gkey_pos', 'py'], epool, p_ch()._y);
                     }
                     plugin_util.sw(sw_id, true);
                 }
