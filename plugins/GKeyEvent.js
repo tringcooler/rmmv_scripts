@@ -66,10 +66,13 @@ var gkey_event = (function() {
         this._map = map_strr;
         this._evs = dyn_evs;
         this._tpool = {};
+        this._last_press = {};
+        this._last_dir = null;
+        this._suc_press = {};
         this._hook_plugin();
     }
     
-    gkey_event.prototype.trigger = function(prio, sw_id, area_id, dir_face) {
+    gkey_event.prototype.trigger = function(prio, sw_id, area_id, dir_face, evpass = true) {
         var ac_key = area_id + (dir_face ? '_fc' : '_ft');
         if(this._tpool[ac_key]) {
             var [_tpr, _tev, _tac] = this._tpool[ac_key];
@@ -77,38 +80,84 @@ var gkey_event = (function() {
                 return [_tev, _tac];
             }
         }
-        var n_ac = new area_checker(this._map, this._evs, area_id, dir_face, prio >= 0);
+        var n_ac = new area_checker(this._map, this._evs, area_id, dir_face, evpass && prio >= 0);
         this._tpool[ac_key] = [prio, sw_id, n_ac];
         return [sw_id, n_ac];
     };
     
-    gkey_event.prototype._key_press = function(suc = false) {
-        if(suc) {
-            return !!this._suc_press;
+    var p_dir = function() {
+        var pdir = $gamePlayer.direction();
+        var sdir = null;
+        if(pdir == 2) {
+            sdir = 'down';
+        } else if(pdir == 4) {
+            sdir = 'left';
+        } else if(pdir == 6) {
+            sdir = 'right';
+        } else if(pdir == 8) {
+            sdir = 'up';
         }
-        var press = Input.isPressed('ok');
+        return sdir;
+    };
+    
+    gkey_event.prototype._key_press_dir = function(suc = false) {
+        var key = p_dir();
+        if(!key) return false;
+        var is_pressed = this._key_press(key, suc);
+        if(suc) return is_pressed;
+        var dir = is_pressed ? key : null;
+        if(dir && this._last_dir != dir) {
+            this._last_dir = dir;
+        }
+        var dir_is_pressed = false;
+        if($gamePlayer.checkStop(1) && !dir) {
+            if(this._last_dir == key) {
+                dir_is_pressed = true;
+            }
+            this._last_dir = null;
+        }
+        this._suc_press[key] = dir_is_pressed;
+        return dir_is_pressed;
+    }
+    
+    gkey_event.prototype._key_press = function(key = 'ok', suc = false) {
+        if(suc) {
+            return !!this._suc_press[key];
+        }
+        var press = Input.isPressed(key);
         var is_press = false;
-        if(!this._last_press && press) {
+        if(!this._last_press[key] && press) {
             is_press = true;
         }
-        this._last_press = press;
-        this._suc_press = is_press;
+        this._last_press[key] = press;
+        this._suc_press[key] = is_press;
         return is_press;
     };
     
     gkey_event.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'gkey_press') {
+                var keydir = false;
                 var suc = false;
+                if(args[0] == 'dir') {
+                    args.shift();
+                    keydir = true;
+                }
                 if(args[0] == 'suc') {
                     args.shift();
                     suc = true;
                 }
-                if(!this._key_press(suc)) return;
+                var is_pressed;
+                if(keydir) {
+                    is_pressed = this._key_press_dir(suc);
+                } else {
+                    is_pressed = this._key_press('ok', suc);
+                }
+                if(!is_pressed) return;
                 var vargs = args.map(a => plugin_util.gval(a));
                 var [sw_id, achkr] = ((sw_id, area_id, dir_face = false, prio = 10) => {
                     dir_face = !!dir_face;
-                    return this.trigger(prio, sw_id, area_id, dir_face);
+                    return this.trigger(prio, sw_id, area_id, dir_face, !keydir);
                 })(...vargs);
                 var t_pos = achkr.check();
                 if(t_pos) {
