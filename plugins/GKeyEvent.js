@@ -1,12 +1,13 @@
 
 var area_checker = (function() {
     
-    function area_checker(map_strr, dyn_evs, area_id, dir_face = false, ev_pass = true) {
+    function area_checker(map_strr, dyn_evs, area_id, dir_face = false, ev_pass = true, ft_pass = true) {
         this._map = map_strr;
         this._evs = dyn_evs;
         this._area = area_id;
         this._dface = dir_face;
         this._epass = ev_pass;
+        this._fpass = ft_pass;
     }
     
     area_checker.prototype._get_area = function(x, y) {
@@ -38,7 +39,11 @@ var area_checker = (function() {
         var pdir = p_ch().direction();
         if(this._dface) {
             var tpos = face_pos(ppos, pdir);
-            return [tpos, [tpos.concat(1), ppos.concat(0)]];
+            if(this._fpass) {
+                return [tpos, [tpos.concat(1), ppos.concat(0)]];
+            } else {
+                return [tpos, [tpos.concat(1)]];
+            }
         } else {
             return [ppos, [ppos.concat(0)]];
         }
@@ -72,7 +77,7 @@ var gkey_event = (function() {
         this._hook_plugin();
     }
     
-    gkey_event.prototype.trigger = function(prio, sw_id, area_id, dir_face, evpass = true) {
+    gkey_event.prototype.trigger = function(prio, sw_id, area_id, dir_face, ft_pass = true) {
         var ac_key = area_id + (dir_face ? '_fc' : '_ft');
         if(this._tpool[ac_key]) {
             var [_tpr, _tev, _tac] = this._tpool[ac_key];
@@ -80,7 +85,7 @@ var gkey_event = (function() {
                 return [_tev, _tac];
             }
         }
-        var n_ac = new area_checker(this._map, this._evs, area_id, dir_face, evpass && prio >= 0);
+        var n_ac = new area_checker(this._map, this._evs, area_id, dir_face, prio >= 0, ft_pass);
         this._tpool[ac_key] = [prio, sw_id, n_ac];
         return [sw_id, n_ac];
     };
@@ -105,7 +110,8 @@ var gkey_event = (function() {
         if(!key) return false;
         var is_pressed = this._key_press(key, suc);
         if(suc) return is_pressed;
-        this._suc_press[key] = is_pressed && $gamePlayer.checkStop(0);
+        var pl = $gamePlayer;
+        this._suc_press[key] = is_pressed && pl.checkStop(0) && !pl.canPass(pl._x, pl._y, pl.direction());
         return this._suc_press[key];
     }
     
@@ -149,7 +155,7 @@ var gkey_event = (function() {
                 if(!dir_stat) return;
                 var vargs = args.map(a => plugin_util.gval(a));
                 [sw_id, achkr] = ((sw_id, area_id, prio = 10) => {
-                    return this.trigger(prio, sw_id, area_id, true, true);
+                    return this.trigger(prio, sw_id, area_id, true, false);
                 })(...vargs);
             }
             if(achkr) {
