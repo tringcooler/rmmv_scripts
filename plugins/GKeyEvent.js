@@ -100,21 +100,23 @@ var gkey_event = (function() {
         return sdir;
     };
     
-    gkey_event.prototype._key_press_dir = function(suc = false) {
+    gkey_event.prototype._key_press_dir = function(tail = false, suc = false) {
         var key = p_dir();
         if(!key) return false;
         var is_pressed = this._key_press(key, suc);
         if(suc) return is_pressed;
         var dir = is_pressed ? key : null;
-        if(dir && this._last_dir != dir) {
-            this._last_dir = dir;
-        }
         var dir_is_pressed = false;
         if($gamePlayer.checkStop(1) && !dir) {
-            if(this._last_dir == key) {
+            if(this._last_dir == key && tail) {
                 dir_is_pressed = true;
             }
             this._last_dir = null;
+        } else if(dir && this._last_dir != dir) {
+            if(!this._last_dir && !tail) {
+                dir_is_pressed = true;
+            }
+            this._last_dir = dir;
         }
         this._suc_press[key] = dir_is_pressed;
         return dir_is_pressed;
@@ -138,10 +140,15 @@ var gkey_event = (function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'gkey_press') {
                 var keydir = false;
+                var keydir_tail = false;
                 var suc = false;
                 if(args[0] == 'dir') {
                     args.shift();
                     keydir = true;
+                }
+                if(args[0] == 'tail') {
+                    args.shift();
+                    keydir_tail = true;
                 }
                 if(args[0] == 'suc') {
                     args.shift();
@@ -149,7 +156,7 @@ var gkey_event = (function() {
                 }
                 var is_pressed;
                 if(keydir) {
-                    is_pressed = this._key_press_dir(suc);
+                    is_pressed = this._key_press_dir(keydir_tail, suc);
                 } else {
                     is_pressed = this._key_press('ok', suc);
                 }
