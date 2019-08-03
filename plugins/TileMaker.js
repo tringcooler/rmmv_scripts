@@ -190,6 +190,7 @@ var tile_maker = (function() {
         
         function tile_inner() {
             this._cpool = {};
+            this._trace = [];
         }
         
         tile_inner.prototype._ginfo = function(pos) {
@@ -197,32 +198,56 @@ var tile_maker = (function() {
         };
         
         tile_inner.prototype._dye = function(pos) {
+            var valid = true;
             var sinfo = this._ginfo(pos);
             if(!sinfo) return;
             var [scode, sdc] = sinfo;
             for(var dir = 0; dir < 4; dir++) {
                 var wm = 1 << dir;
-                if(scode & wm) continue;
-                var rwm = 1 << ((dir + 2) % 4) ;
+                var rwm = 1 << ((dir + 2) % 4);
+                var sconn = !(scode & wm);
                 var dpos = posadd(pos, c_wall_msk2pos[wm]);
                 var dinfo = this._ginfo(dpos);
                 if(!dinfo) {
-                    sdc.val().conn += 1;
+                    if(sconn) {
+                        sdc.val().conn += 1;
+                    }
                     continue;
                 }
                 var [dcode, ddc] = dinfo;
-                if(dcode & rwm) continue;
-                sdc.val().conn += ddc.val().conn - 1;
-                ddc.dye_by(sdc);
+                var dconn = !(dcode & rwm);
+                if(!sconn && dconn) {
+                    ddc.val().conn -= 1;
+                    if(ddc.val().conn <= 0) {
+                        valid = false;
+                    }
+                } else if(sconn && dconn) {
+                    sdc.val().conn += ddc.val().conn - 1;
+                    ddc.dye_by(sdc);
+                }
             }
+            if(sdc.val().conn <= 0) {
+                valid = false;
+            }
+            return valid;
         };
         
         tile_inner.prototype.set_unit = function(pos, code) {
-            if(this._ginfo(pos)) return;
+            this._trace.push([pos, code]);
+            if(this._ginfo(pos)) return false;
             var dc = new dye_chain();
             dc.val({conn: 0});
             pool_util.set(pos, this._cpool, [code, dc]);
-            this._dye(pos);
+            return this._dye(pos);
+        };
+        
+        tile_inner.prototype.reset = function(back = 0) {
+            var trace = this._trace.slice(0, -back);
+            this._trace = [];
+            this._cpool = {};
+            for(var [pos, code] of trace) {
+                this.set_unit(pos, code);
+            }
         };
         
         return tile_inner;
@@ -232,6 +257,40 @@ var tile_maker = (function() {
     var tile_inter = (function() {
     })();
     
-    return tile_inner;
+    testf = function() {
+        var ti = new tile_inner();
+        var r;
+        var show = function() {
+            pool_util.each(ti._cpool, (kx, ky, info) => {
+                console.log([parseInt(kx), parseInt(ky)], info[0].toString(2), [info[1].id(), info[1].val().conn]);
+            }, 2);
+            console.log(r);
+            r = null;
+        };
+        r = ti.set_unit([0, 0], 0x7);
+        r = ti.set_unit([0, 1], 0x7);
+        show();
+        ti.reset(1);
+        show();
+        r = ti.set_unit([0, 1], 0xd);
+        show();
+        ti.reset(1);
+        show();
+        r = ti.set_unit([1, 1], 0xe);
+        show();
+        r = ti.set_unit([0, 1], 0x7);
+        show();
+        ti.reset(1);
+        show();
+        r = ti.set_unit([0, 1], 0x9);
+        show();
+        ti.reset(1);
+        show();
+        r = ti.set_unit([0, 1], 0x1);
+        show();
+        r = ti.set_unit([2, 1], 0xe);
+        show();
+        return ti;
+    };
 
 })();

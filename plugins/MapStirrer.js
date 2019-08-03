@@ -30,7 +30,7 @@ var pool_util = (function() {
         }
         if(deep != 0 && pool instanceof Object) {
             for(var k in pool) {
-                var r = _each(pool[k], cb, deep - 1, [k].concat(path));
+                var r = _each(pool[k], cb, deep - 1, path.concat(k));
                 if(r === false) {
                     return false;
                 } else if(r !== undefined) {
