@@ -227,10 +227,9 @@ var tile_maker = (function() {
                 var [dcode, ddc] = dinfo;
                 var dconn = !(dcode & rwm);
                 if(sdc.is_conn(ddc)) {
-                    
-                    //TODO
-                    
-                } else if(!sconn && dconn) {
+                    continue;
+                }
+                if(!sconn && dconn) {
                     ddc.val().conn -= 1;
                     if(ddc.val().conn <= 0) {
                         valid = false;
