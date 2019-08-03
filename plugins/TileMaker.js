@@ -237,8 +237,12 @@ var tile_maker = (function() {
                         }
                     }
                 } else if(sconn && dconn) {
-                    sdc.val().conn += ddc.val().conn - 1;
-                    ddc.dye_by(sdc);
+                    if(sdc.is_conn(ddc)) {
+                        sdc.val().conn -= 1;
+                    } else {
+                        sdc.val().conn += ddc.val().conn - 1;
+                        ddc.dye_by(sdc);
+                    }
                 }
             }
             if(sdc.val().conn <= 0) {
@@ -246,7 +250,7 @@ var tile_maker = (function() {
             } else {
                 invalid_walls.some = [];
             }
-            return valid ? invalid_walls : null;
+            return valid ? null : invalid_walls;
         };
         
         tile_inner.prototype.set_unit = function(pos, code) {
@@ -262,6 +266,7 @@ var tile_maker = (function() {
             var trace = this._trace.slice(0, -back);
             this._trace = [];
             this._cpool = {};
+            if(back === null) return;
             for(var [pos, code] of trace) {
                 this.set_unit(pos, code);
             }
@@ -306,6 +311,28 @@ var tile_maker = (function() {
         r = ti.set_unit([0, 1], 0x1);
         show();
         r = ti.set_unit([2, 1], 0xe);
+        show();
+        ti.reset(null);
+        console.log('=====');
+        r = ti.set_unit([0, 0], 0x3);
+        r = ti.set_unit([1, 0], 0x6);
+        r = ti.set_unit([0, 1], 0x9);
+        show();
+        r = ti.set_unit([1, 1], 0xe);
+        show();
+        ti.reset(null);
+        console.log('=====');
+        r = ti.set_unit([-1, -1], 0x3);
+        r = ti.set_unit([0, -1], 0x2);
+        r = ti.set_unit([1, -1], 0x6);
+        r = ti.set_unit([1, 0], 0x4);
+        r = ti.set_unit([1, 1], 0xc);
+        r = ti.set_unit([0, 1], 0x8);
+        r = ti.set_unit([-1, 1], 0x9);
+        show();
+        r = ti.set_unit([-1, 0], 0x0);
+        show();
+        r = ti.set_unit([0, 0], 0xe);
         show();
         return ti;
     };
