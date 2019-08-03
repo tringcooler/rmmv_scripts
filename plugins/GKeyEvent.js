@@ -105,20 +105,8 @@ var gkey_event = (function() {
         if(!key) return false;
         var is_pressed = this._key_press(key, suc);
         if(suc) return is_pressed;
-        var dir = is_pressed ? key : null;
-        var dir_is_pressed = false;
-        if($gamePlayer.checkStop(0)) {
-            if(!dir && this._last_dir == key) {
-                dir_is_pressed = 'enter';
-            } else if(dir && !this._last_dir) {
-                dir_is_pressed = 'touch';
-            }
-            this._last_dir = null;
-        } else if(dir && this._last_dir != dir) {
-            this._last_dir = dir;
-        }
-        this._suc_press[key] = dir_is_pressed;
-        return dir_is_pressed;
+        this._suc_press[key] = is_pressed && $gamePlayer.checkStop(0);
+        return this._suc_press[key];
     }
     
     gkey_event.prototype._key_press = function(key = 'ok', suc = false) {
@@ -147,7 +135,7 @@ var gkey_event = (function() {
                 }
                 if(!this._key_press('ok', suc)) return;
                 var vargs = args.map(a => plugin_util.gval(a));
-                [sw_id, achkr] = ((sw_id, area_id, dir_face = false, prio = 10) => {
+                [sw_id, achkr] = ((sw_id, area_id, dir_face = true, prio = 10) => {
                     dir_face = !!dir_face;
                     return this.trigger(prio, sw_id, area_id, dir_face, true);
                 })(...vargs);
@@ -161,7 +149,7 @@ var gkey_event = (function() {
                 if(!dir_stat) return;
                 var vargs = args.map(a => plugin_util.gval(a));
                 [sw_id, achkr] = ((sw_id, area_id, prio = 10) => {
-                    return this.trigger(prio, sw_id, area_id, dir_stat == 'touch', false);
+                    return this.trigger(prio, sw_id, area_id, true, true);
                 })(...vargs);
             }
             if(achkr) {
