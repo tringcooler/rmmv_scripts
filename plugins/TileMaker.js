@@ -276,76 +276,96 @@ var tile_maker = (function() {
         return tile_inner;
         
     })();
+    
+    var tile_deck = (function() {
+        
+        function tile_deck() {
+            this._upool = [];
+            this._tpool = [];
+        }
+        
+        var walls2types = {
+            0: 1,
+            1: 4,
+            2: 6,
+            3: 4,
+        };
+        
+        tile_deck.prototype._units_by_walls = function(unum, wnum) {
+            var tnum = walls2types[wnum];
+            var pnum = Math.floor(unum / tnum);
+            var dnum = unum - pnum * tnum;
+            var rnums = [...Array(tnum)].map((v, i) => i < dnum ? pnum + 1: pnum);
+            return rnums;
+        };
+        
+        tile_deck.prototype.set_units = function(unums) {
+            for(var i = 0; i < unums.length; i++) {
+                this._upool.push(this._units_by_walls(unums[i], i));
+            }
+        };
+        
+        tile_deck.prototype.take_unit = function(uidx, peek = false) {
+            if(this._upool[uidx[0]][uidx[1]] > 0) {
+                if(!peek) {
+                    this._upool[uidx[0]][uidx[1]] --;
+                }
+                return true;
+            } else {
+                return false;
+            }
+        };
+        
+        tile_deck.prototype._demote_seq = function(uidx) {
+            var seq = [];
+            for(var i = 0; i < uidx[0]; i++) {
+                seq = this._upool[i].map((v, i2) => [i, i2]).concat(seq);
+            }
+            seq = this._upool[uidx[0]].filter((v, i) => i != uidx[1]).map((v, i) => [uidx[0], i]).concat(seq);
+            return seq;
+        };
+        
+        var _cent_rng = seq_len => (neg => [-neg, seq_len - neg])(Math.floor((seq_len - 1) / 2));
+        var tseq2pos = function(tseq) {
+            var pos_seq = [];
+            var [ys, ye] = _cent_rng(tseq.length);
+            for(var y = ys; y < ye; y++) {
+                var [xs, xe] = _cent_rng(tseq[y - ys].length);
+                for(var x = xs; x < xe; x++) {
+                    if(tseq[y - ys][x - xs]) {
+                        pos_seq.push([x, y]);
+                    }
+                }
+            }
+            return pos_seq;
+        };
+        var tcode2tseq = function(tcode) {
+            return tcode.split(',').map(s => s.split('').map(v => parseInt(v)));
+        };
+        
+        tile_deck.prototype.make_tile = function(tcode) {
+            var pos_seq = tseq2pos(tcode2tseq(tcode));
+            
+        };
+        
+        return tile_deck;
+        
+    })();
 
-    var tile_inter = (function() {
+    var tile_map = (function() {
+        
+        function tile_map() {
+            this._apool = new area_pool();
+        }
+        
+        return tile_map;
+        
     })();
     
     testf = function() {
-        var ti = new tile_inner();
-        var r;
-        var show = function() {
-            pool_util.each(ti._cpool, (kx, ky, info) => {
-                console.log([parseInt(kx), parseInt(ky)], info[0].toString(2), [info[1].id(), info[1].val().conn]);
-            }, 2);
-            console.log(r);
-            r = null;
-        };
-        r = ti.set_unit([0, 0], 0x7);
-        r = ti.set_unit([0, 1], 0x7);
-        show();
-        ti.reset(1);
-        show();
-        r = ti.set_unit([0, 1], 0xd);
-        show();
-        ti.reset(1);
-        show();
-        r = ti.set_unit([1, 1], 0xe);
-        show();
-        r = ti.set_unit([0, 1], 0x7);
-        show();
-        ti.reset(1);
-        show();
-        r = ti.set_unit([0, 1], 0x9);
-        show();
-        ti.reset(1);
-        show();
-        r = ti.set_unit([0, 1], 0x1);
-        show();
-        r = ti.set_unit([2, 1], 0xe);
-        show();
-        ti.reset(2);
-        show();
-        r = ti.set_unit([0, 1], 0xd);
-        show();
-        ti.reset(null);
-        console.log('=====');
-        r = ti.set_unit([0, 0], 0x3);
-        r = ti.set_unit([1, 0], 0x6);
-        r = ti.set_unit([0, 1], 0x9);
-        show();
-        r = ti.set_unit([1, 1], 0xe);
-        show();
-        ti.reset(null);
-        console.log('=====');
-        r = ti.set_unit([-1, -1], 0x3);
-        r = ti.set_unit([0, -1], 0x2);
-        r = ti.set_unit([1, -1], 0x6);
-        r = ti.set_unit([1, 0], 0x4);
-        r = ti.set_unit([1, 1], 0xc);
-        r = ti.set_unit([0, 1], 0x8);
-        r = ti.set_unit([-1, 1], 0x9);
-        show();
-        r = ti.set_unit([-1, 0], 0x0);
-        show();
-        r = ti.set_unit([0, 0], 0xe);
-        show();
-        ti.reset(2);
-        console.log('-----');
-        r = ti.set_unit([-1, 0], 0x1);
-        show();
-        r = ti.set_unit([0, 0], 0xe);
-        show();
-        return ti;
+        var td = new tile_deck();
+        td.set_units([30, 15, 10, 5]);
+        return td;
     };
 
 })();
