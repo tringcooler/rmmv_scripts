@@ -393,15 +393,17 @@ var tile_maker = (function() {
             return seq;
         };
         
+        var _turn_pos = (dir, pos) => [...Array(dir)].reduce(r => (pos => [pos[1], -pos[0]])(r), pos);
         var _cent_rng = seq_len => (neg => [-neg, seq_len - neg])(Math.floor((seq_len - 1) / 2));
         var tseq2pos = function(tseq) {
+            var tdir = tseq.shift();
             var pos_seq = [];
             var [ys, ye] = _cent_rng(tseq.length);
             for(var y = ys; y < ye; y++) {
                 var [xs, xe] = _cent_rng(tseq[y - ys].length);
                 for(var x = xs; x < xe; x++) {
                     if(tseq[y - ys][x - xs]) {
-                        pos_seq.push([x, y]);
+                        pos_seq.push(_turn_pos(tdir, [x, y]));
                     }
                 }
             }
@@ -510,13 +512,43 @@ var tile_maker = (function() {
             }
         };
         
-        tile_deck.prototype.make_tile = function(tcode) {
+        var MT_MAX_RETRY = 5;
+        tile_deck.prototype.make_tile = function(tcode, retry = 0) {
             var pos_seq = tcode2pos(tcode);
             var tu_seq = [];
             var ti = new tile_inner();
             for(var pos of pos_seq) {
                 var uidx = this.rand_unit();
-                //TODO
+                if(!this._set_tile_unit_to_tile(pos, uidx, tu_seq, ti)) {
+                    this._cancel_tile(tu_seq);
+                    if(retry < MT_MAX_RETRY) {
+                        return this.make_tile(tcode, retry + 1);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            this._tpool.push(tu_seq);
+            return true;
+        };
+        
+        var tidx2tcode = [
+            '11,11', '111,001', '111,100', '110,011', '011,110', '111,010', '1111'
+        ].map(c => [...Array(4)].map((v, i) => [i, c].join(','))).flat();
+        tile_deck.prototype.rand_tcode = function() {
+            return tidx2tcode[this._rng.randint(tidx2tcode.length - 1)];
+        };
+        
+        tile_deck.prototype.make_tiles = function(retry = 0) {
+            while(this._unit_num() > 0) {
+                var tcode = this.rand_tcode();
+                if(!this.make_tile(tcode)) {
+                    if(retry < MT_MAX_RETRY) {
+                        return this.make_tiles(retry + 1);
+                    } else {
+                        return null;
+                    }
+                }
             }
         };
         
@@ -535,23 +567,11 @@ var tile_maker = (function() {
     })();
     
     testf = function() {
-        var td = new tile_deck();
+        var rng = new mt_rng(123);
+        var td = new tile_deck(rng);
         var r;
-        //td.set_units([30, 15, 10, 5]);
-        //td.set_units([30, 0, 6, 4]);
-        td.set_units([30, 15, 6, 4]);
-        var tu_seq = [];
-        var ti = new tile_inner();
-        td._set_tile_unit_to_tile([0, -1], code2uidx[0x7], tu_seq, ti);
-        td._set_tile_unit_to_tile([1, 0], code2uidx[0xe], tu_seq, ti);
-        /*console.log(tu_seq);
-        td._set_tile_unit_to_tile([0, 0], code2uidx[0xd], tu_seq, ti);
-        console.log(tu_seq);*/
-        td._set_tile_unit_to_tile([0, 1], code2uidx[0xd], tu_seq, ti);
-        r = td._set_tile_unit_to_tile([-1, 0], code2uidx[0xb], tu_seq, ti);
-        console.log(r, tu_seq);
-        r = td._set_tile_unit_to_tile([0, 0], code2uidx[0], tu_seq, ti);
-        console.log(r, tu_seq);
+        td.set_units([30, 15, 10, 5]);
+        td.make_tiles();
         return td;
     };
 
