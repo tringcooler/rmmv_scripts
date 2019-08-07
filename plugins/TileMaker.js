@@ -417,7 +417,7 @@ var tile_maker = (function() {
             return _cache_tcode[tcode2pos];
         };
         
-        var _some_chooser = function*(some_bits, num) {
+        var some_chooser = function*(some_bits, num) {
             if(num == 0 || !some_bits) {
                 if(num == 0) {
                     yield 0;
@@ -432,34 +432,42 @@ var tile_maker = (function() {
                 _msk <<= 1;
                 if(!_b) continue;
                 var nxt_bits = (some_bits & (_b - 1));
-                for(var nxt_ch of _some_chooser(nxt_bits, num - 1)) {
+                for(var nxt_ch of some_chooser(nxt_bits, num - 1)) {
                     yield nxt_ch | _b;
                 }
             }
         };
         
-        tile_deck.prototype._split_tile_unit = function(src_cw, some_w) {
-            var sw_seq = some_w;
-            var sw_msk = 1;
-            var sw_unum = 0;
+        var any_bit = function(some_bits) {
+            for(var b of some_chooser(some_bits, 1)) {
+                return b;
+            }
+            return 0;
+        };
+        
+        tile_deck.prototype._demote_tile_unit = function(src_cw, some_w, cnum = 1) {
+            var dst_unum = -1;
             var dst_cw = 0;
-            while(sw_seq) {
-                var _w = (sw_seq & sw_msk);
-                sw_seq &= ~sw_msk;
-                sw_msk <<= 1;
-                if(!_w) continue;
-                var _dw = (src_cw & ~w);
+            var dst_w = 0;
+            for(var ch_w of some_chooser(some_w, cnum)) {
+                var _dw = (src_cw & ~ch_w);
                 var _unum = this.peek_unit(code2uidx[_dw]);
-                if(_unum > sw_unum) {
-                    sw_unum = _unum;
+                if(_unum > dst_unum) {
+                    dst_unum = _unum;
                     dst_cw = _dw;
+                    dst_w = ch_w;
                 }
             }
-            
+            if(dst_unum < 0) {
+                return null;
+            } else if(dst_unum == 0) {
+                return this._split_tile_unit(src_cw, some_w, cnum + 1);
+            }
+            return dst_cw;
         };
         
         var pad_unit_code = () => 0;
-        tile_deck.prototype._set_tile_unit_to_tile = function(tu_seq, ti, uidx) {
+        tile_deck.prototype._set_tile_unit_to_tile = function(pos, uidx, tu_seq, ti) {
             var cw;
             if(this.take_unit(uidx)) {
                 cw = uidx2code(uidx);
@@ -468,23 +476,22 @@ var tile_maker = (function() {
             }
             var inv_info = ti.set_unit(pos, cw);
             if(inv_info) {
+                if(inv_info.some.length <= 0) {
+                    return false;
+                }
+                var some_w = inv_info.some.reduce((r, w) => r | w);
+                var every_w = inv_info.every.reduce((r, w) => r | w);
+                var demote_cw = this._demote_tile_unit(cw & ~every_w, some_w);
+                if(demote_cw === null) {
+                    var split_cw = (any_bit(some_w) | every_w);
+                    demote_cw = (cw & ~split_cw);
+                    this.put_unit(code2uidx[split_cw]);
+                    this.put_unit(code2uidx[demote_cw]);
+                } else {
+                    this.put_unit(uidx);
+                }
                 ti.reset(1);
-                this.put_unit(uidx);
-                if(inv_info.some) {
-                    if(inv_info.some.length <= 0) {
-                        return false;
-                    }
-                    var vu = inv_info.some.reduce((r, w) => (u => {r[this.take_unit(u, true)] = [u, code2uidx[w]]; return r})(code2uidx[cw & ~w]), {});
-                    var v_unum = Math.max(...Object.keys(vu));
-                    if(v_unum <= 0) {
-                        //TODO
-                    }
-                    var [v_uidx, v_c_uidx] = vu[v_unum];
-                    return v_uidx;
-                }
-                if(inv_info.every) {
-                    //TODO
-                }
+                return this._set_tile_unit_to_tile(pos, code2uidx[demote_cw], tu_seq, ti);
             } else {
                 tu_seq.push(cw);
             }
