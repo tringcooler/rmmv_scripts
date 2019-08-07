@@ -291,7 +291,7 @@ var tile_maker = (function() {
         
         var walls2types = [1, 4, 6, 4];
         
-        var uidx2code = [
+        var _uidx2code = [
             [0],
             [TYPC.wall[0], TYPC.wall[1], TYPC.wall[2], TYPC.wall[3]],
             [
@@ -306,6 +306,17 @@ var tile_maker = (function() {
                 TYPC.wall[3] | TYPC.wall[0] | TYPC.wall[1],
             ],
         ];
+        var uidx2code = uidx => _uidx2code[uidx[0]][uidx[1]];
+        
+        var code2uidx = (() => {
+            var r = {};
+            for(var u0 = 0; u0 < _uidx2code.length; u0 ++) {
+                for(var u1 = 0; u1 < _uidx2code[u0].length; u1 ++) {
+                    r[_uidx2code[u0][u1]] = [u0, u1];
+                }
+            }
+            return r;
+        })();
         
         tile_deck.prototype._units_by_walls = function(unum, wnum) {
             var tnum = walls2types[wnum];
@@ -332,6 +343,12 @@ var tile_maker = (function() {
             }
         };
         
+        tile_deck.prototype.put_unit = function(uidx) {
+            if(this._upool[uidx[0]] && this._upool[uidx[0]][uidx[1]] >= 0) {
+                this._upool[uidx[0]][uidx[1]] ++;
+            }
+        };
+        
         tile_deck.prototype._unit_num = function() {
             return this._upool.reduce((r, p) => r + p.reduce((r, v) => r + v), 0);
         };
@@ -350,16 +367,12 @@ var tile_maker = (function() {
             return null;
         };
         
-        tile_deck.prototype.draw_unit = function() {
+        tile_deck.prototype.rand_unit = function() {
             var unum = this._unit_num();
             if(unum <= 0) return null;
             var nidx = this._rng.randint(unum - 1);
             var uidx = this._nidx2uidx(nidx);
-            if(this.take_unit(uidx)) {
-                return uidx2code[uidx[0]][uidx[1]];
-            } else {
-                return null;
-            }
+            return [uidx[0], uidx[1]];
         };
         
         tile_deck.prototype._demote_seq = function(uidx) {
@@ -398,21 +411,43 @@ var tile_maker = (function() {
             return _cache_tcode[tcode2pos];
         };
         
-        var set_tile_unit_to_tile = function(tu_seq, ti) {
-            var cw = this.draw_unit();
-            if(cw === null) {
-                cw = 0;
+        var pad_unit_code = () => 0;
+        tile_deck.prototype._set_tile_unit_to_tile = function(tu_seq, ti, uidx) {
+            var cw;
+            if(this.take_unit(uidx)) {
+                cw = uidx2code(uidx);
+            } else {
+                cw = pad_unit_code();
             }
             var inv_info = ti.set_unit(pos, cw);
             if(inv_info) {
-                
+                ti.reset(1);
+                this.put_unit(uidx);
+                if(inv_info.some) {
+                    if(inv_info.some.length <= 0) {
+                        return false;
+                    }
+                    var vu = inv_info.some.reduce((r, w) => (u => {r[this.take_unit(u, true)] = u; return r})(code2uidx[cw & ~w]), {});
+                    var v_unum = Math.max(...Object.keys(vu));
+                    if(v_unum <= 0) {
+                        //TODO
+                    }
+                    var v_uidx = vu[v_unum];
+                    return v_uidx;
+                }
+                if(inv_info.every) {
+                    //TODO
+                }
             } else {
                 tu_seq.push(cw);
             }
+            return true;
         };
         
-        var cancel_tile = function(tu_seq) {
-            
+        tile_deck.prototype._cancel_tile = function(tu_seq) {
+            for(var uidx of tu_seq) {
+                this.put_unit(uidx);
+            }
         };
         
         tile_deck.prototype.make_tile = function(tcode) {
@@ -420,7 +455,8 @@ var tile_maker = (function() {
             var tu_seq = [];
             var ti = new tile_inner();
             for(var pos of pos_seq) {
-                
+                var uidx = this.rand_unit();
+                //TODO
             }
         };
         
