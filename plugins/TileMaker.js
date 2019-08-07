@@ -332,14 +332,20 @@ var tile_maker = (function() {
             }
         };
         
-        tile_deck.prototype.take_unit = function(uidx, peek = false) {
+        tile_deck.prototype.take_unit = function(uidx) {
             if(this._upool[uidx[0]][uidx[1]] > 0) {
-                if(!peek) {
-                    this._upool[uidx[0]][uidx[1]] --;
-                }
+                this._upool[uidx[0]][uidx[1]] --;
                 return true;
             } else {
                 return false;
+            }
+        };
+        
+        tile_deck.prototype.peek_unit = function(uidx) {
+            if(this._upool[uidx[0]] && this._upool[uidx[0]][uidx[1]] > 0) {
+                return this._upool[uidx[0]][uidx[1]];
+            } else {
+                return 0;
             }
         };
         
@@ -411,6 +417,26 @@ var tile_maker = (function() {
             return _cache_tcode[tcode2pos];
         };
         
+        tile_deck.prototype._split_tile_unit = function(src_cw, some_w) {
+            var sw_seq = some_w;
+            var sw_msk = 1;
+            var sw_unum = 0;
+            var dst_cw = 0;
+            while(sw_seq) {
+                var _w = (sw_seq & sw_msk);
+                sw_seq &= ~sw_msk;
+                sw_msk <<= 1;
+                if(!_w) continue;
+                var _dw = (src_cw & ~w);
+                var _unum = this.peek_unit(code2uidx[_dw]);
+                if(_unum > sw_unum) {
+                    sw_unum = _unum;
+                    dst_cw = _dw;
+                }
+            }
+            
+        };
+        
         var pad_unit_code = () => 0;
         tile_deck.prototype._set_tile_unit_to_tile = function(tu_seq, ti, uidx) {
             var cw;
@@ -427,12 +453,12 @@ var tile_maker = (function() {
                     if(inv_info.some.length <= 0) {
                         return false;
                     }
-                    var vu = inv_info.some.reduce((r, w) => (u => {r[this.take_unit(u, true)] = u; return r})(code2uidx[cw & ~w]), {});
+                    var vu = inv_info.some.reduce((r, w) => (u => {r[this.take_unit(u, true)] = [u, code2uidx[w]]; return r})(code2uidx[cw & ~w]), {});
                     var v_unum = Math.max(...Object.keys(vu));
                     if(v_unum <= 0) {
                         //TODO
                     }
-                    var v_uidx = vu[v_unum];
+                    var [v_uidx, v_c_uidx] = vu[v_unum];
                     return v_uidx;
                 }
                 if(inv_info.every) {
