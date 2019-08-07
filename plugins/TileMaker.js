@@ -48,6 +48,9 @@ var tile_maker = (function() {
     
     var posadd = (p1, p2) => [p1[0] + p2[0], p1[1] + p2[1]];
     
+    var sum = p => p.reduce((r, v) => r + v, 0);
+    var sum2 = p => p.reduce((r, p) => r + sum(p), 0);
+    
     var area_pool = (function() {
         
         function area_pool() {
@@ -286,6 +289,7 @@ var tile_maker = (function() {
         function tile_deck(rng) {
             this._upool = [];
             this._tpool = [];
+            this._epool = {};
             if(!rng) {
                 rng = new mt_rng();
             }
@@ -359,7 +363,15 @@ var tile_maker = (function() {
         };
         
         tile_deck.prototype._unit_num = function() {
-            return this._upool.reduce((r, p) => r + p.reduce((r, v) => r + v), 0);
+            return sum2(this._upool);
+        };
+        
+        tile_deck.prototype._t_unit_num = function() {
+            return sum2(this._tpool);
+        };
+        
+        tile_deck.prototype._event_num = function() {
+            return sum(Object.values(this._epool));
         };
         
         tile_deck.prototype._nidx2uidx = function(nidx) {
@@ -416,10 +428,10 @@ var tile_maker = (function() {
         
         var _cache_tcode = {};
         var tcode2pos = function(tcode) {
-            if(!_cache_tcode[tcode2pos]) {
-                _cache_tcode[tcode2pos] = tseq2pos(tcode2tseq(tcode));
+            if(!_cache_tcode[tcode]) {
+                _cache_tcode[tcode] = tseq2pos(tcode2tseq(tcode));
             }
-            return _cache_tcode[tcode2pos];
+            return _cache_tcode[tcode];
         };
         
         var some_chooser = function*(some_bits, num) {
@@ -528,6 +540,7 @@ var tile_maker = (function() {
                     }
                 }
             }
+            // TODO: store pos info
             this._tpool.push(tu_seq);
             return true;
         };
@@ -552,7 +565,34 @@ var tile_maker = (function() {
             }
         };
         
+        tile_deck.prototype.rand_event = function() {
+            var eidx = this._rng.randint(this._event_num() - 1);
+            var idx = 0;
+            for(var ec in this._epool) {
+                
+            }
+        };
+        
+        tile_deck.prototype.fill_events = function(evnums) {
+            this._epool = evnums;
+            var empty_num = this._t_unit_num() - this._event_num();
+            if(empty_num < 0) return null;
+            Object.assign(this._epool, {0: empty_num});
+            var evcodes = Object.keys(evpool);
+            var ecode = this._rng.randint(evcodes.length - 1);
+        };
+        
         return tile_deck;
+        
+    })();
+    
+    var tile_area = (function() {
+        
+        function tile_area() {
+            this._apool = new area_pool();
+        }
+        
+        return tile_area;
         
     })();
 
