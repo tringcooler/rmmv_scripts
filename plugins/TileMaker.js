@@ -249,8 +249,11 @@ var tile_maker = (function() {
             }
             if(sdc.val().conn <= 0) {
                 valid = false;
+                if(invalid_walls.some.length <= 0) {
+                    invalid_walls.some = null
+                }
             } else {
-                invalid_walls.some = null;
+                invalid_walls.some = [];
             }
             return valid ? null : invalid_walls;
         };
@@ -296,7 +299,7 @@ var tile_maker = (function() {
             [TYPC.wall[0], TYPC.wall[1], TYPC.wall[2], TYPC.wall[3]],
             [
                 TYPC.wall[0] | TYPC.wall[1], TYPC.wall[1] | TYPC.wall[2],
-                TYPC.wall[2] | TYPC.wall[3], TYPC.wall[3] | TYPC.wall[1],
+                TYPC.wall[2] | TYPC.wall[3], TYPC.wall[3] | TYPC.wall[0],
                 TYPC.wall[0] | TYPC.wall[2], TYPC.wall[1] | TYPC.wall[3],
             ],
             [
@@ -446,6 +449,9 @@ var tile_maker = (function() {
         };
         
         tile_deck.prototype._demote_tile_unit = function(src_cw, some_w, cnum = 1) {
+            if(!some_w && this.peek_unit(code2uidx[src_cw]) > 0) {
+                return src_cw;
+            }
             var dst_unum = -1;
             var dst_cw = 0;
             var dst_w = 0;
@@ -461,7 +467,7 @@ var tile_maker = (function() {
             if(dst_unum < 0) {
                 return null;
             } else if(dst_unum == 0) {
-                return this._split_tile_unit(src_cw, some_w, cnum + 1);
+                return this._demote_tile_unit(src_cw, some_w, cnum + 1);
             }
             return dst_cw;
         };
@@ -476,11 +482,11 @@ var tile_maker = (function() {
             }
             var inv_info = ti.set_unit(pos, cw);
             if(inv_info) {
-                if(inv_info.some.length <= 0) {
+                if(!inv_info.some) {
                     return false;
                 }
-                var some_w = inv_info.some.reduce((r, w) => r | w);
-                var every_w = inv_info.every.reduce((r, w) => r | w);
+                var some_w = inv_info.some.reduce((r, w) => r | w, 0);
+                var every_w = inv_info.every.reduce((r, w) => r | w, 0);
                 var demote_cw = this._demote_tile_unit(cw & ~every_w, some_w);
                 if(demote_cw === null) {
                     var split_cw = (any_bit(some_w) | every_w);
@@ -530,7 +536,22 @@ var tile_maker = (function() {
     
     testf = function() {
         var td = new tile_deck();
-        td.set_units([30, 15, 10, 5]);
+        var r;
+        //td.set_units([30, 15, 10, 5]);
+        //td.set_units([30, 0, 6, 4]);
+        td.set_units([30, 15, 6, 4]);
+        var tu_seq = [];
+        var ti = new tile_inner();
+        td._set_tile_unit_to_tile([0, -1], code2uidx[0x7], tu_seq, ti);
+        td._set_tile_unit_to_tile([1, 0], code2uidx[0xe], tu_seq, ti);
+        /*console.log(tu_seq);
+        td._set_tile_unit_to_tile([0, 0], code2uidx[0xd], tu_seq, ti);
+        console.log(tu_seq);*/
+        td._set_tile_unit_to_tile([0, 1], code2uidx[0xd], tu_seq, ti);
+        r = td._set_tile_unit_to_tile([-1, 0], code2uidx[0xb], tu_seq, ti);
+        console.log(r, tu_seq);
+        r = td._set_tile_unit_to_tile([0, 0], code2uidx[0], tu_seq, ti);
+        console.log(r, tu_seq);
         return td;
     };
 
