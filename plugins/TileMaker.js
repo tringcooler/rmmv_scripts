@@ -90,6 +90,7 @@ var tile_maker = (function() {
     var tile_unit = (function() {
         
         function tile_unit(code) {
+            this._code = code;
             this._apool = new area_pool();
             this.setup(code);
         }
@@ -279,17 +280,32 @@ var tile_maker = (function() {
     
     var tile_deck = (function() {
         
-        function tile_deck() {
+        function tile_deck(rng) {
             this._upool = [];
             this._tpool = [];
+            if(!rng) {
+                rng = new mt_rng();
+            }
+            this._rng = rng;
         }
         
-        var walls2types = {
-            0: 1,
-            1: 4,
-            2: 6,
-            3: 4,
-        };
+        var walls2types = [1, 4, 6, 4];
+        
+        var uidx2code = [
+            [0],
+            [TYPC.wall[0], TYPC.wall[1], TYPC.wall[2], TYPC.wall[3]],
+            [
+                TYPC.wall[0] | TYPC.wall[1], TYPC.wall[1] | TYPC.wall[2],
+                TYPC.wall[2] | TYPC.wall[3], TYPC.wall[3] | TYPC.wall[1],
+                TYPC.wall[0] | TYPC.wall[2], TYPC.wall[1] | TYPC.wall[3],
+            ],
+            [
+                TYPC.wall[0] | TYPC.wall[1] | TYPC.wall[2],
+                TYPC.wall[1] | TYPC.wall[2] | TYPC.wall[3],
+                TYPC.wall[2] | TYPC.wall[3] | TYPC.wall[0],
+                TYPC.wall[3] | TYPC.wall[0] | TYPC.wall[1],
+            ],
+        ];
         
         tile_deck.prototype._units_by_walls = function(unum, wnum) {
             var tnum = walls2types[wnum];
@@ -316,6 +332,36 @@ var tile_maker = (function() {
             }
         };
         
+        tile_deck.prototype._unit_num = function() {
+            return this._upool.reduce((r, p) => r + p.reduce((r, v) => r + v), 0);
+        };
+        
+        tile_deck.prototype._nidx2uidx = function(nidx) {
+            var idx = 0;
+            for(var i = 0; i < this._upool.length; i++) {
+                for(var j = 0; j < this._upool[i].length; j++) {
+                    var num = this._upool[i][j];
+                    if(idx + num > nidx) {
+                        return [i, j, nidx - idx];
+                    }
+                    idx += num;
+                }
+            }
+            return null;
+        };
+        
+        tile_deck.prototype.draw_unit = function() {
+            var unum = this._unit_num();
+            if(unum <= 0) return null;
+            var nidx = this._rng.randint(unum - 1);
+            var uidx = this._nidx2uidx(nidx);
+            if(this.take_unit(uidx)) {
+                return uidx2code[uidx[0]][uidx[1]];
+            } else {
+                return null;
+            }
+        };
+        
         tile_deck.prototype._demote_seq = function(uidx) {
             var seq = [];
             for(var i = 0; i < uidx[0]; i++) {
@@ -339,13 +385,43 @@ var tile_maker = (function() {
             }
             return pos_seq;
         };
+        
         var tcode2tseq = function(tcode) {
             return tcode.split(',').map(s => s.split('').map(v => parseInt(v)));
         };
         
-        tile_deck.prototype.make_tile = function(tcode) {
-            var pos_seq = tseq2pos(tcode2tseq(tcode));
+        var _cache_tcode = {};
+        var tcode2pos = function(tcode) {
+            if(!_cache_tcode[tcode2pos]) {
+                _cache_tcode[tcode2pos] = tseq2pos(tcode2tseq(tcode));
+            }
+            return _cache_tcode[tcode2pos];
+        };
+        
+        var set_tile_unit_to_tile = function(tu_seq, ti) {
+            var cw = this.draw_unit();
+            if(cw === null) {
+                cw = 0;
+            }
+            var inv_info = ti.set_unit(pos, cw);
+            if(inv_info) {
+                
+            } else {
+                tu_seq.push(cw);
+            }
+        };
+        
+        var cancel_tile = function(tu_seq) {
             
+        };
+        
+        tile_deck.prototype.make_tile = function(tcode) {
+            var pos_seq = tcode2pos(tcode);
+            var tu_seq = [];
+            var ti = new tile_inner();
+            for(var pos of pos_seq) {
+                
+            }
         };
         
         return tile_deck;
