@@ -417,6 +417,27 @@ var tile_maker = (function() {
             return _cache_tcode[tcode2pos];
         };
         
+        var _some_chooser = function*(some_bits, num) {
+            if(num == 0 || !some_bits) {
+                if(num == 0) {
+                    yield 0;
+                }
+                return;
+            }
+            var _seq = some_bits;
+            var _msk = 1;
+            while(_seq) {
+                var _b = (_seq & _msk);
+                _seq &= ~_msk;
+                _msk <<= 1;
+                if(!_b) continue;
+                var nxt_bits = (some_bits & (_b - 1));
+                for(var nxt_ch of _some_chooser(nxt_bits, num - 1)) {
+                    yield nxt_ch | _b;
+                }
+            }
+        };
+        
         tile_deck.prototype._split_tile_unit = function(src_cw, some_w) {
             var sw_seq = some_w;
             var sw_msk = 1;
