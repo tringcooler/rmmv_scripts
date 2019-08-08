@@ -171,6 +171,8 @@ var gkey_event = (function() {
                         pool_util.set(['gkey_pos', 'y'], epool, t_pos[1]);
                         pool_util.set(['gkey_pos', 'px'], epool, p_ch()._x);
                         pool_util.set(['gkey_pos', 'py'], epool, p_ch()._y);
+                        pool_util.set(['gkey_pos', 'pdir'], epool, p_ch().direction());
+                        pool_util.set(['gkey_pos', 'psdir'], epool, p_dir());
                     }
                     plugin_util.sw(sw_id, true);
                 }
