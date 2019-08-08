@@ -52,6 +52,7 @@ var tile_maker = (function() {
     var e2c = (e, c) => (e * (TYPC.msk_terr + 1)) | (c & TYPC.msk_terr) | (e ? TYPC.cent : 0);
     
     var posadd = (p1, p2) => [p1[0] + p2[0], p1[1] + p2[1]];
+    var possub = (p1, p2) => [p1[0] - p2[0], p1[1] - p2[1]];
     
     var sum = p => p.reduce((r, v) => r + v, 0);
     var sum2 = p => p.reduce((r, p) => r + sum(p), 0);
@@ -113,6 +114,21 @@ var tile_maker = (function() {
             });
             return [left, top, right - left + 1, bot - top + 1];
         };
+        
+        area_pool.prototype.any_dir = function(pos, dir, ...filters) {
+            dir = posadd(dir, pos);
+            var rpos = null;
+            this.each((...tpos) => {
+                var _c1 = possub(dir, tpos);
+                var _c2 = possub(tpos, pos);
+                if(!isNaN(_c1[0] * _c1[1])) return;
+                if(_c1[0] * _c2[0] + _c1[1] * _c2[1] > 0) {
+                    rpos = tpos;
+                    return false;
+                }
+            }, ...filters);
+            return rpos;
+        }
         
         area_pool.prototype.repr = function() {
             var [left, top, width, height] = this.range();
@@ -683,12 +699,10 @@ var tile_maker = (function() {
             if(map_hook) {
                 this._apool.hook(...map_hook);
             }
-            this._tpool = {};
         }
         
         tile_map.prototype._set_tile = function(pos, ta) {
             ta._apool.merge_to(this._apool, pos);
-            pool_util.set(pos, this._tpool, ta);
         };
         
         return tile_map;
@@ -703,10 +717,11 @@ var tile_maker = (function() {
         td.make_tiles();
         td.fill_events({0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1});
         while(true) {
-            ta = td.draw_tile();
+            var ta = td.draw_tile();
             if(!ta) break;
             console.log('=====');
             console.log(ta._apool.repr());
+            //rta = ta;
         }
         //console.log((new tile_unit(0x7))._apool.repr());
     };
