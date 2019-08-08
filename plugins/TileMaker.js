@@ -53,6 +53,7 @@ var tile_maker = (function() {
     
     var posadd = (p1, p2) => [p1[0] + p2[0], p1[1] + p2[1]];
     var possub = (p1, p2) => [p1[0] - p2[0], p1[1] - p2[1]];
+    var posneg = p => [-p[0], -p[1]];
     
     var sum = p => p.reduce((r, v) => r + v, 0);
     var sum2 = p => p.reduce((r, p) => r + sum(p), 0);
@@ -74,6 +75,10 @@ var tile_maker = (function() {
             if(!src) src = 0;
             var dst = a_ow(src, area);
             this._pool_util.set(pos, this._pool, dst);
+        };
+        
+        area_pool.prototype.get = function(pos) {
+            return this._pool_util.get(pos, this._pool);
         };
         
         area_pool.prototype.put_on_bot = function(pos, bot_area) {
@@ -139,7 +144,8 @@ var tile_maker = (function() {
             this.each((tx, ty, ta) => {
                 r[ty - top][tx - left] = ta;
             });
-            return r.map(rr => rr.map(a => a ? ('000' + a.toString(16)).slice(-4) : '    ').join(' ')).join('\n');
+            var ra = r.map(rr => rr.map(a => a ? ('000' + a.toString(16)).slice(-4) : '    ').join(' ')).join('\n');
+            return '(' + [left, top].join(', ') + ')\n' + ra;
         };
         
         return area_pool;
@@ -691,8 +697,11 @@ var tile_maker = (function() {
             }
         };
         
-        tile_area.prototype.slot = function(dir) {
-            return this._apool.any_dir([0, 0], dir, this._apool.filter(TYPA.slot));
+        tile_area.prototype.edge_cent = function(dir) {
+            var slot_pos = this._apool.any_dir([0, 0], dir, this._apool.filter(TYPA.slot));
+            if(slot_pos === null) return null;
+            var rstep = dir.map(v => - Math.sign(v) * 2);
+            return posadd(slot_pos, rstep);
         };
         
         return tile_area;
@@ -712,18 +721,34 @@ var tile_maker = (function() {
             ta._apool.merge_to(this._apool, pos);
         };
         
-        tile_map.prototype.slot = function(pos, dpos) {
-            var dir = possub(dpos, pos);
-            return this._apool.any_dir(pos, dir, this._apool.filter(TYPA.slot));
+        tile_map.prototype._valid_put = function(pos, dpos) {
+            return (this._apool.get(pos) & TYPA.land)
+                && (this._apool.get(dpos) & TYPA.port);
         };
         
         tile_map.prototype.put_tile = function(pos, dpos, ta) {
-            
+            if((pos instanceof tile_area) && !this._apool.get([0, 0])) {
+                ta = pos;
+                return this._set_tile([0, 0], ta);
+            }
+            if(!this._valid_put(pos, dpos)) return null;
+            var dir = possub(dpos, pos);
+            var slot_pos = this._apool.any_dir(pos, dir, this._apool.filter(TYPA.slot));
+            if(slot_pos === null) return null;
+            var ta_ec_pos = ta.edge_cent(posneg(dir));
+            return this._set_tile(possub(slot_pos, ta_ec_pos), ta);
         };
         
         return tile_map;
         
     })();
+    
+    show = function(t) {
+        if(t._apool) {
+            console.log('=====');
+            console.log(t._apool.repr());
+        }
+    };
     
     testf = function() {
         var rng = new mt_rng(123);
@@ -732,14 +757,26 @@ var tile_maker = (function() {
         td.set_units([30, 15, 10, 5]);
         td.make_tiles();
         td.fill_events({0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1});
-        while(true) {
+        /*while(true) {
             var ta = td.draw_tile();
             if(!ta) break;
             console.log('=====');
             console.log(ta._apool.repr());
             //rta = ta;
-        }
+        }*/
         //console.log((new tile_unit(0x7))._apool.repr());
+        var tm = new tile_map();
+        tm.put_tile(td.draw_tile());
+        show(tm);
+        var ta = td.draw_tile();
+        show(ta);
+        tm.put_tile([0, -2], [-1, -2], ta);
+        show(tm);
+        var ta = td.draw_tile();
+        show(ta);
+        tm.put_tile([-2, 0], [-2, 1], ta);
+        show(tm);
+        return [td, tm];
     };
 
 })();
