@@ -46,6 +46,8 @@ var tile_maker = (function() {
         
     };
     
+    var e2c = (e, c) => (e * (TYPC.msk_terr + 1)) | (c & TYPC.msk_terr) | (e ? TYPC.cent : 0);
+    
     var posadd = (p1, p2) => [p1[0] + p2[0], p1[1] + p2[1]];
     
     var sum = p => p.reduce((r, v) => r + v, 0);
@@ -367,7 +369,7 @@ var tile_maker = (function() {
         };
         
         tile_deck.prototype._t_unit_num = function() {
-            return sum2(this._tpool);
+            return sum(this._tpool.map(v => v.length));
         };
         
         tile_deck.prototype._event_num = function() {
@@ -513,7 +515,7 @@ var tile_maker = (function() {
                 ti.reset(1);
                 return this._set_tile_unit_to_tile(pos, code2uidx[demote_cw], tu_seq, ti);
             } else {
-                tu_seq.push(cw);
+                tu_seq.push([pos, cw]);
             }
             return true;
         };
@@ -565,11 +567,29 @@ var tile_maker = (function() {
             }
         };
         
-        tile_deck.prototype.rand_event = function() {
-            var eidx = this._rng.randint(this._event_num() - 1);
+        tile_deck.prototype._nidx2ecode = function(nidx) {
             var idx = 0;
             for(var ec in this._epool) {
-                
+                var num = this._epool[ec];
+                if(idx + num > nidx) {
+                    return ec;
+                }
+                idx += num;
+            }
+            return null;
+        };
+        
+        tile_deck.prototype.rand_event = function() {
+            var eidx = this._rng.randint(this._event_num() - 1);
+            return this._nidx2ecode(eidx);
+        };
+        
+        tile_deck.prototype.take_event = function(ecode) {
+            if(this._epool[ecode] > 0) {
+                this._epool[ecode] --;
+                return true;
+            } else {
+                return false;
             }
         };
         
@@ -578,8 +598,21 @@ var tile_maker = (function() {
             var empty_num = this._t_unit_num() - this._event_num();
             if(empty_num < 0) return null;
             Object.assign(this._epool, {0: empty_num});
-            var evcodes = Object.keys(evpool);
-            var ecode = this._rng.randint(evcodes.length - 1);
+            for(var tu_seq of this._tpool) {
+                for(var tu of tu_seq) {
+                    var [pos, cw] = tu;
+                    var ecode = this.rand_event();
+                    if(ecode === null) return null;
+                    if(!this.take_event(ecode)) return null;
+                    tu[1] = e2c(ecode, cw);
+                }
+            }
+        };
+        
+        tile_deck.prototype.draw_tile = function() {
+            var tu_seq = this._tpool.shift();
+            if(!tu_seq) return null;
+            
         };
         
         return tile_deck;
