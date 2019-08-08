@@ -76,7 +76,7 @@ var tile_maker = (function() {
                 var ry = parseInt(ky);
                 if(filters.length > 0 && !filters.every(f => f(area))) return;
                 return cb(rx, ry, area);
-            });
+            }, 2);
         };
         
         area_pool.prototype.merge_to = function(bot, bpos = null) {
@@ -86,6 +86,26 @@ var tile_maker = (function() {
             this.each((tx, ty, ta) => {
                 bot.set(posadd([tx, ty], bpos), ta);
             });
+        };
+        
+        area_pool.prototype.range = function() {
+            var [left, top, right, bot] = [0, 0, 0, 0];
+            this.each((tx, ty, ta) => {
+                if(tx < left) left = tx;
+                if(ty < top) top = ty;
+                if(tx > right) right = tx;
+                if(ty > bot) bot = ty;
+            });
+            return [left, top, right - left + 1, bot - top + 1];
+        };
+        
+        area_pool.prototype.repr = function() {
+            var [left, top, width, height] = this.range();
+            var r = [...Array(height)].map(v => [...Array(width)]);
+            this.each((tx, ty, ta) => {
+                r[ty - top][tx - left] = ta;
+            });
+            return r.map(rr => rr.map(a => a ? ('000' + a.toString(16)).slice(-4) : '    ').join(' ')).join('\n');
         };
         
         return area_pool;
@@ -572,7 +592,7 @@ var tile_maker = (function() {
             for(var ec in this._epool) {
                 var num = this._epool[ec];
                 if(idx + num > nidx) {
-                    return ec;
+                    return parseInt(ec);
                 }
                 idx += num;
             }
@@ -612,7 +632,7 @@ var tile_maker = (function() {
         tile_deck.prototype.draw_tile = function() {
             var tu_seq = this._tpool.shift();
             if(!tu_seq) return null;
-            
+            return new tile_area(tu_seq);
         };
         
         return tile_deck;
@@ -621,9 +641,21 @@ var tile_maker = (function() {
     
     var tile_area = (function() {
         
-        function tile_area() {
+        function tile_area(tu_seq) {
             this._apool = new area_pool();
+            this.setup(tu_seq);
         }
+        
+        tile_area.prototype._setup_unit = function(pos, code) {
+            var tu = new tile_unit(code);
+            tu._apool.merge_to(this._apool, pos.map(v => v * 2));
+        };
+        
+        tile_area.prototype.setup = function(tu_seq) {
+            for(var [pos, code] of tu_seq) {
+                this._setup_unit(pos, code);
+            }
+        };
         
         return tile_area;
         
@@ -645,7 +677,14 @@ var tile_maker = (function() {
         var r;
         td.set_units([30, 15, 10, 5]);
         td.make_tiles();
-        return td;
+        td.fill_events({0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1});
+        while(true) {
+            ta = td.draw_tile();
+            if(!ta) break;
+            console.log('=====');
+            console.log(ta._apool.repr());
+        }
+        //console.log((new tile_unit(0x7))._apool.repr());
     };
 
 })();
