@@ -717,7 +717,7 @@ var tile_maker = (function() {
             }
         }
         
-        tile_map.prototype._set_tile = function(pos, ta) {
+        tile_map.prototype.set_tile = function(pos, ta) {
             ta._apool.merge_to(this._apool, pos);
         };
         
@@ -726,17 +726,23 @@ var tile_maker = (function() {
                 && (this._apool.get(dpos) & TYPA.port);
         };
         
-        tile_map.prototype.put_tile = function(pos, dpos, ta) {
-            if((pos instanceof tile_area) && !this._apool.get([0, 0])) {
-                ta = pos;
-                return this._set_tile([0, 0], ta);
-            }
+        tile_map.prototype.tile_pos = function(pos, dpos, ta) {
             if(!this._valid_put(pos, dpos)) return null;
             var dir = possub(dpos, pos);
             var slot_pos = this._apool.any_dir(pos, dir, this._apool.filter(TYPA.slot));
             if(slot_pos === null) return null;
             var ta_ec_pos = ta.edge_cent(posneg(dir));
-            return this._set_tile(possub(slot_pos, ta_ec_pos), ta);
+            return possub(slot_pos, ta_ec_pos);
+        };
+        
+        tile_map.prototype.put_tile = function(pos, dpos, ta) {
+            if((pos instanceof tile_area) && !this._apool.get([0, 0])) {
+                ta = pos;
+                return this.set_tile([0, 0], ta);
+            }
+            var dst_pos = this.tile_pos(pos, dpos, ta);
+            if(dst_pos === null) return null;
+            return this.set_tile(dst_pos, ta);
         };
         
         return tile_map;
