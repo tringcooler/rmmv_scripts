@@ -57,13 +57,25 @@ var tile_maker = (function() {
         
         function area_pool() {
             this._pool = {};
+            this._pool_util = Object.assign({}, pool_util);
         }
         
+        area_pool.prototype.hook = function(pool, utils) {
+            this._pool = pool;
+            Object.assign(this._pool_util, utils);
+        };
+        
         area_pool.prototype.set = function(pos, area) {
-            var src = pool_util.get(pos, this._pool);
+            var src = this._pool_util.get(pos, this._pool);
             if(!src) src = 0;
             var dst = a_ow(src, area);
-            pool_util.set(pos, this._pool, dst);
+            this._pool_util.set(pos, this._pool, dst);
+        };
+        
+        area_pool.prototype.put_on_bot = function(pos, bot_area) {
+            var src = this._pool_util.get(pos, this._pool);
+            if(!src) src = 0;
+            return a_ow(bot_area, src);
         };
         
         area_pool.prototype.filter = function(msk, dst = 0, eq = false) {
@@ -71,7 +83,7 @@ var tile_maker = (function() {
         };
         
         area_pool.prototype.each = function(cb, ...filters) {
-            pool_util.each(this._pool, (kx, ky, area) => {
+            this._pool_util.each(this._pool, (kx, ky, area) => {
                 var rx = parseInt(kx);
                 var ry = parseInt(ky);
                 if(filters.length > 0 && !filters.every(f => f(area))) return;
@@ -663,9 +675,18 @@ var tile_maker = (function() {
 
     var tile_map = (function() {
         
-        function tile_map() {
+        function tile_map(map_hook = null) {
             this._apool = new area_pool();
+            if(map_hook) {
+                this._apool.hook(...map_hook);
+            }
+            this._tpool = {};
         }
+        
+        tile_map.prototype._set_tile = function(pos, ta) {
+            ta._apool.merge_to(this._apool, pos);
+            pool_util.set(pos, this._tpool, ta);
+        };
         
         return tile_map;
         
