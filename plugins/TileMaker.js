@@ -115,13 +115,16 @@ var tile_maker = (function() {
             return [left, top, right - left + 1, bot - top + 1];
         };
         
+        var valid_dir = d => isNaN(d[0] * d[1]);
         area_pool.prototype.any_dir = function(pos, dir, ...filters) {
-            dir = posadd(dir, pos);
+            var dir = dir.map(v => v ? v * Infinity : 0);
+            if(!valid_dir(dir)) return null;
+            var pdir = posadd(dir, pos);
             var rpos = null;
             this.each((...tpos) => {
-                var _c1 = possub(dir, tpos);
+                var _c1 = possub(pdir, tpos);
                 var _c2 = possub(tpos, pos);
-                if(!isNaN(_c1[0] * _c1[1])) return;
+                if(!valid_dir(_c1)) return;
                 if(_c1[0] * _c2[0] + _c1[1] * _c2[1] > 0) {
                     rpos = tpos;
                     return false;
@@ -688,6 +691,10 @@ var tile_maker = (function() {
             }
         };
         
+        tile_area.prototype.slot = function(dir) {
+            return this._apool.any_dir([0, 0], dir, this._apool.filter(TYPA.slot));
+        };
+        
         return tile_area;
         
     })();
@@ -703,6 +710,15 @@ var tile_maker = (function() {
         
         tile_map.prototype._set_tile = function(pos, ta) {
             ta._apool.merge_to(this._apool, pos);
+        };
+        
+        tile_map.prototype.slot = function(pos, dpos) {
+            var dir = possub(dpos, pos);
+            return this._apool.any_dir(pos, dir, this._apool.filter(TYPA.slot));
+        };
+        
+        tile_map.prototype.put_tile = function(pos, dpos, ta) {
+            
         };
         
         return tile_map;
