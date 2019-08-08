@@ -28,12 +28,12 @@ var tile_maker = (function() {
         none: 0x00,
         land: 0x04,
         wall: 0x08,
-        warn: 0x80,
+        warn: 0x20,
         msk_land: 0x07,
     };
     
     var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.wall);
-    var prv_a_ow = (bot, top) => 0;//TODO
+    var prv_a_ow = (bot, top) => (top_t => (((bot & TYPA.msk_terr) && top_t) ? TYPA_P.warn : 0) | prv_a(a_ow(bot, top_t) & top_t))(top & (TYPA.msk_terr | TYPA.msk_supp)); // TODO
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
@@ -99,10 +99,8 @@ var tile_maker = (function() {
         
         area_pool.prototype.each = function(cb, ...filters) {
             this._pool_util.each(this._pool, (kx, ky, area) => {
-                var rx = parseInt(kx);
-                var ry = parseInt(ky);
-                if(filters.length > 0 && !filters.every(f => f(area))) return;
-                return cb(rx, ry, area);
+                if(!area || (filters.length > 0 && !filters.every(f => f(area)))) return;
+                return cb(parseInt(kx), parseInt(ky), area);
             }, 2);
         };
         
@@ -116,7 +114,7 @@ var tile_maker = (function() {
         };
         
         area_pool.prototype.range = function() {
-            var [left, top, right, bot] = [0, 0, 0, 0];
+            var [left, top, right, bot] = [Infinity, Infinity, -Infinity, -Infinity];
             this.each((tx, ty, ta) => {
                 if(tx < left) left = tx;
                 if(ty < top) top = ty;
@@ -753,8 +751,13 @@ var tile_maker = (function() {
         
         tile_map.prototype.preview_tile = function(pos, ta) {
             var prv = new area_pool();
-            ta.each((tx, ty, ta) => {
+            ta._apool.each((tx, ty, ta) => {
+                var dpos = posadd([tx, ty], pos);
+                var ba = this._apool.get(dpos);
+                var pa = prv_a_ow(ba, ta);
+                prv.set(dpos, pa);
             });
+            return prv;
         };
         
         return tile_map;
@@ -763,8 +766,11 @@ var tile_maker = (function() {
     
     show = function(t) {
         if(t._apool) {
+            t = t._apool
+        }
+        if(t.repr) {
             console.log('=====');
-            console.log(t._apool.repr());
+            console.log(t.repr());
         }
     };
     
@@ -783,18 +789,24 @@ var tile_maker = (function() {
             //rta = ta;
         }*/
         //console.log((new tile_unit(0x7))._apool.repr());
+        var ta, tpos;
         var tm = new tile_map();
         tm.put_tile(td.draw_tile());
         show(tm);
-        var ta = td.draw_tile();
+        ta = td.draw_tile();
         show(ta);
         tm.put_tile([0, -2], [-1, -2], ta);
         show(tm);
-        var ta = td.draw_tile();
+        ta = td.draw_tile();
         show(ta);
         tm.put_tile([-2, 0], [-2, 1], ta);
         show(tm);
-        return [td, tm];
+        ta = td.draw_tile();
+        show(ta);
+        tpos = tm.tile_pos([0, 0], [0, 1], ta);
+        pta = tm.preview_tile(tpos, ta);
+        show(pta);
+        return [td, tm, pta];
     };
 
 })();
