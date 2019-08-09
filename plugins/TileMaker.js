@@ -778,7 +778,7 @@ var tile_maker = (function() {
         
     })();
     
-    show = function(t) {
+    var show = function(t) {
         if(t._apool) {
             t = t._apool
         }
@@ -786,41 +786,6 @@ var tile_maker = (function() {
             console.log('=====');
             console.log(t.repr());
         }
-    };
-    
-    testf = function() {
-        var td = new tile_deck(123);
-        var r;
-        td.set_units([30, 15, 10, 5]);
-        td.make_tiles();
-        td.fill_events({0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1});
-        /*while(true) {
-            var ta = td.draw_tile();
-            if(!ta) break;
-            console.log('=====');
-            console.log(ta._apool.repr());
-            //rta = ta;
-        }*/
-        //console.log((new tile_unit(0x7))._apool.repr());
-        var ta, tpos;
-        var tm = new tile_map();
-        tm.put_tile(td.draw_tile());
-        show(tm);
-        ta = td.draw_tile();
-        show(ta);
-        tm.put_tile([0, -2], [-1, -2], ta);
-        show(tm);
-        ta = td.draw_tile();
-        show(ta);
-        tm.put_tile([-2, 0], [-2, 1], ta);
-        show(tm);
-        ta = td.draw_tile();
-        show(ta);
-        //tpos = tm.tile_pos([0, 0], [0, 1], ta);
-        tpos = tm.tile_pos([-4, -2], [-4, -1], ta);
-        pta = tm.preview_tile(tpos, ta);
-        show(pta);
-        return [td, tm, pta];
     };
     
     return {
