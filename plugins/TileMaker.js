@@ -11,10 +11,11 @@ var tile_maker = (function() {
         over_p: 0x20,
         slot: 0x40,
         cent: 0x80,
+        enti: 0x8000,
         msk_supp: 0x03,
         msk_terr: 0x0c,
         msk_area: 0xff,
-        msk_evnt: 0xff00,
+        msk_evnt: 0x7f00,
         msk_ovwr: 0xff80,
         msk_all: 0xffff,
     };
@@ -35,14 +36,14 @@ var tile_maker = (function() {
     };
     
     var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.msk_pass);
-    var prv_a_ow = (bot, top) => (((bot & TYPA.cent) & (top & TYPA.cent)) ? TYPA_P.warn : 0) | prv_a(top);
+    var prv_a_ow = (bot, top) => (((bot & TYPA.enti) & (top & TYPA.enti)) ? TYPA_P.warn : 0) | prv_a(top);
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
         wall: [0x01, 0x02, 0x04, 0x08],
-        cent: 0x10,
+        cent: 0x80,
         msk_terr: 0xff,
-        msk_evnt: 0xff00,
+        msk_evnt: 0x7f00,
     };
     
     var c_wall_msk2pos = {
@@ -56,8 +57,8 @@ var tile_maker = (function() {
         0x9: [-1, 1],
     };
     
-    var e_c2a = (c, a) => (c & TYPC.msk_evnt) | (a & TYPA.msk_area);
-    var e2c = (e, c) => (e * (TYPC.msk_terr + 1)) | (c & TYPC.msk_terr) | (e ? TYPC.cent : 0);
+    var e_c2a = (c, a) => (c & TYPC.msk_evnt) | (a & ~TYPA.msk_evnt);
+    var e2c = (e, c) => (e * (TYPC.msk_terr + 1)) | (c & ~TYPC.msk_evnt) | (e ? TYPC.cent : 0);
     
     var posadd = (p1, p2) => [p1[0] + p2[0], p1[1] + p2[1]];
     var possub = (p1, p2) => [p1[0] - p2[0], p1[1] - p2[1]];
@@ -200,9 +201,11 @@ var tile_maker = (function() {
         };
         
         tile_unit.prototype.set_cent = function(code) {
+            var a = TYPA.enti;
             if(code & TYPC.cent) {
-                this._apool.set([0, 0], e_c2a(code, TYPA.cent));
+                a = e_c2a(code, TYPA.cent | a);
             }
+            this._apool.set([0, 0], a);
         };
         
         tile_unit.prototype.setup = function(code) {
