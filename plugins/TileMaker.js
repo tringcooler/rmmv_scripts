@@ -28,12 +28,14 @@ var tile_maker = (function() {
         none: 0x00,
         land: 0x04,
         wall: 0x08,
-        warn: 0x20,
+        cent: 0x80,
+        warn: 0x100,
         msk_land: 0x07,
+        msk_pass: 0x88,
     };
     
-    var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.wall);
-    var prv_a_ow = (bot, top) => (top_t => (((bot & TYPA.msk_terr) && top_t) ? TYPA_P.warn : 0) | prv_a(a_ow(bot, top_t) & top_t))(top & (TYPA.msk_terr | TYPA.msk_supp)); // TODO
+    var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.msk_pass);
+    var prv_a_ow = (bot, top) => (sc => (sc(bot) + sc(top) > 2) ? TYPA_P.warn : 0)(a => ((a & TYPA.msk_supp) ? 1 : 0) + ((a & TYPA.msk_terr) ? 2 : 0)) | prv_a(top);
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
