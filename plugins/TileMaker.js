@@ -680,6 +680,18 @@ var tile_maker = (function() {
             }
         };
         
+        tile_deck.prototype.save = function() {
+            if(this._tpool.length > 0) {
+                return this._tpool;
+            } else {
+                return null;
+            }
+        };
+        
+        tile_deck.prototype.restore = function(tpool) {
+            this._tpool = tpool;
+        };
+        
         tile_deck.prototype.draw_tile = function() {
             var tu_seq = this._tpool.shift();
             if(!tu_seq) return null;
