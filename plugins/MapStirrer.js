@@ -202,6 +202,15 @@ var map_stirrer = (function() {
         return (z * $gameMap.height() + mod(y, $gameMap.height())) * $gameMap.width() + mod(x, $gameMap.width());
     };
     
+    var idx2pos = function(pidx) {
+        var layer_size = $gameMap.height() * $gameMap.width();
+        var z = Math.floor(pidx / layer_size);
+        var lidx = mod(pidx, layer_size);
+        var y = Math.floor(lidx / $gameMap.width());
+        var x = mod(lidx, $gameMap.width());
+        return [x, y, z];
+    };
+    
     var mapdata = function() {
         return $gameMap.data();
     };
@@ -219,6 +228,23 @@ var map_stirrer = (function() {
         var pidx = pos2idx(x, y, z);
         this._ntiles.set(mapid(), pidx, id);
         mapdata()[pidx] = id;
+    };
+    
+    map_stirrer.prototype.layer_each = function(z, cb) {
+        var lstart = pos2idx(0, 0, z);
+        var lend = pos2idx(0, 0, z + 1);
+        for(var pidx = lstart; pidx < lend; pidx ++) {
+            var [x, y, z] = idx2pos(pidx);
+            var id = mapdata()[pidx];
+            if(id) {
+                var r = cb(x, y, id);
+                if(r === false) {
+                    break;
+                } else if(r !== undefined) {
+                    this.set_tile(x, y, z, id);
+                }
+            }
+        }
     };
     
     map_stirrer.prototype.resume_tiles = function() {
