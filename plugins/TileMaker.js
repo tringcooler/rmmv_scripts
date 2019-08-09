@@ -74,9 +74,9 @@ var tile_maker = (function() {
             this._pool_util = Object.assign({}, pool_util);
         }
         
-        area_pool.prototype.hook = function(pool, utils) {
+        area_pool.prototype.hook = function(pool, util) {
             this._pool = pool;
-            Object.assign(this._pool_util, utils);
+            Object.assign(this._pool_util, util);
         };
         
         area_pool.prototype.set = function(pos, area) {
