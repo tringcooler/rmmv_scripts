@@ -363,6 +363,8 @@ var tile_maker = (function() {
             this._epool = {};
             if(!rng) {
                 rng = new mt_rng();
+            } else if(typeof rng == 'number') {
+                rng = new mt_rng(rng);
             }
             this._rng = rng;
         }
@@ -787,8 +789,7 @@ var tile_maker = (function() {
     };
     
     testf = function() {
-        var rng = new mt_rng(123);
-        var td = new tile_deck(rng);
+        var td = new tile_deck(123);
         var r;
         td.set_units([30, 15, 10, 5]);
         td.make_tiles();
@@ -820,6 +821,11 @@ var tile_maker = (function() {
         pta = tm.preview_tile(tpos, ta);
         show(pta);
         return [td, tm, pta];
+    };
+    
+    return {
+        'deck': tile_deck,
+        'map': tile_map,
     };
 
 })();
