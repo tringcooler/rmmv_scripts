@@ -11,7 +11,7 @@ var area_checker = (function() {
     }
     
     area_checker.prototype._get_area = function(x, y) {
-        return this._map.get_tile(x, y, 5);
+        return this._map.get_tile(x, y, 5) & 0xff;
     };
     
     var p_ch = function() {
