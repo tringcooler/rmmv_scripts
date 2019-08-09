@@ -52,40 +52,18 @@ var pool_util = (function() {
 
 var store_pool = (function() {
     
-    /*var SP_LIST = [];
-    var _clear_pools = function() {
-        for(var sp of SP_LIST) {
-            delete sp._pool;
-        }
-    };
-    var _o_aload = Game_System.prototype.onAfterLoad;
-    Game_System.prototype.onAfterLoad = function() {
-        _o_aload.call(this);
-        _clear_pools();
-    };
-    var _o_cgame = DataManager.createGameObjects;
-    DataManager.createGameObjects = function() {
-        _o_cgame.call(this);
-        _clear_pools();
-    };*/
-    
     function store_pool(name) {
         this._name = name;
-        //SP_LIST.push(this);
     }
     
     store_pool.prototype.pool = function() {
-        //if(!this._pool) {
-            if(!$gameVariables._plugin_store_pool) {
-                $gameVariables._plugin_store_pool = {};
-            }
-            if(!$gameVariables._plugin_store_pool[this._name]) {
-                $gameVariables._plugin_store_pool[this._name] = {};
-            }
-            //this._pool = $gameVariables._plugin_store_pool[this._name];
-            return $gameVariables._plugin_store_pool[this._name];
-        //}
-        //return this._pool;
+        if(!$gameVariables._plugin_store_pool) {
+            $gameVariables._plugin_store_pool = {};
+        }
+        if(!$gameVariables._plugin_store_pool[this._name]) {
+            $gameVariables._plugin_store_pool[this._name] = {};
+        }
+        return $gameVariables._plugin_store_pool[this._name];
     };
     
     store_pool.prototype.get = function(...idxs) {
