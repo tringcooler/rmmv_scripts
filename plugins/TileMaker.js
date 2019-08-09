@@ -29,13 +29,13 @@ var tile_maker = (function() {
         land: 0x04,
         wall: 0x08,
         cent: 0x80,
-        warn: 0x100,
+        warn: 0x8000,
         msk_land: 0x07,
         msk_pass: 0x88,
     };
     
     var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.msk_pass);
-    var prv_a_ow = (bot, top) => (sc => (sc(bot) + sc(top) > 2) ? TYPA_P.warn : 0)(a => ((a & TYPA.msk_supp) ? 1 : 0) + ((a & TYPA.msk_terr) ? 2 : 0)) | prv_a(top);
+    var prv_a_ow = (bot, top) => (((bot & TYPA.cent) & (top & TYPA.cent)) ? TYPA_P.warn : 0) | prv_a(top);
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
@@ -758,6 +758,13 @@ var tile_maker = (function() {
                 var ba = this._apool.get(dpos);
                 var pa = prv_a_ow(ba, ta);
                 prv.set(dpos, pa);
+                if(pa & TYPA_P.warn) {
+                    for(var i = -1; i < 2; i++) {
+                        for(var j = -1; j < 2; j++) {
+                            prv.set(posadd(dpos, [i, j]), TYPA_P.warn);
+                        }
+                    }
+                }
             });
             return prv;
         };
@@ -805,7 +812,8 @@ var tile_maker = (function() {
         show(tm);
         ta = td.draw_tile();
         show(ta);
-        tpos = tm.tile_pos([0, 0], [0, 1], ta);
+        //tpos = tm.tile_pos([0, 0], [0, 1], ta);
+        tpos = tm.tile_pos([-4, -2], [-4, -1], ta);
         pta = tm.preview_tile(tpos, ta);
         show(pta);
         return [td, tm, pta];
