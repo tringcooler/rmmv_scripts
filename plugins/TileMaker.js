@@ -367,6 +367,7 @@ var tile_maker = (function() {
                 rng = new mt_rng(rng);
             }
             this._rng = rng;
+            this._ptile = null;
         }
         
         var walls2types = [1, 4, 6, 4];
@@ -692,10 +693,22 @@ var tile_maker = (function() {
             this._tpool = tpool;
         };
         
+        tile_deck.prototype.peek_tile = function() {
+            if(!this._ptile) {
+                var tu_seq = this._tpool[0]
+                if(!tu_seq) return null;
+                this._ptile = new tile_area(tu_seq);
+            }
+            return this._ptile;
+        };
+        
         tile_deck.prototype.draw_tile = function() {
-            var tu_seq = this._tpool.shift();
-            if(!tu_seq) return null;
-            return new tile_area(tu_seq);
+            var rtile = this.peek_tile();
+            if(rtile){
+                this._tpool.shift();
+                this._ptile = null;
+            }
+            return rtile;
         };
         
         return tile_deck;
