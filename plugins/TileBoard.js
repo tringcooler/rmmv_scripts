@@ -8,6 +8,7 @@ var tile_board = (function() {
         cent: 0x80,
         msk_area: 0xff,
         msk_evnt: 0x7f00,
+        warn: 0x8000,
     };
     
     var a2e = a => (a & TYPA.msk_evnt) / (TYPA.msk_area + 1);
@@ -16,12 +17,12 @@ var tile_board = (function() {
     
     function map_builder(map_info, map_strr) {
         this._map_strr = map_strr;
-        this._minfo = map;
+        this._minfo = map_info;
     }
     
     map_builder.prototype._init_decorator = function() {
         this._decorators = [];
-        for(var [tname, tinfo, tlayer] in this._minfo.tileset) {
+        for(var [tname, tinfo, tlayer] of this._minfo.tileset) {
             if(tinfo instanceof Array) {
                 this._decorators.push(new tile_decorator(this._map_strr, ...tinfo));
             }
@@ -36,9 +37,9 @@ var tile_board = (function() {
     
     var get_tiles_info = function(area, tileset) {
         var tiles_info = [...Array(AREA_LAYER)].map(v => 0);
-        for(var [tname, tinfo, tlayer] in tileset) {
+        for(var [tname, tinfo, tlayer] of tileset) {
             tlayer = tlayer ? tlayer : 0;
-            var tmsk = TYPA.tname;
+            var tmsk = TYPA[tname];
             if(area & tmsk) {
                 if(tinfo instanceof Array) {
                     tiles_info[tlayer] = tinfo[0];
@@ -52,8 +53,8 @@ var tile_board = (function() {
     
     var rng_each = function(rng, cb) {
         var [[left, top], [width, height]] = rng;
-        for(var x = left, x < left + width; x ++) {
-            for(var y = top, y < top + height; y ++) {
+        for(var x = left; x < left + width; x ++) {
+            for(var y = top; y < top + height; y ++) {
                 if(cb(x, y) === false) break;
             }
         }
@@ -61,12 +62,12 @@ var tile_board = (function() {
     
     map_builder.prototype.build = function(rng) {
         rng_each(rng, (tx, ty) => {
-            var area = this._map_strr.get_tile(x, y, AREA_LAYER);
+            var area = this._map_strr.get_tile(tx, ty, AREA_LAYER);
             var tinfo = get_tiles_info(area, this._minfo.tileset);
             for(var tlayer = 0; tlayer < tinfo.length; tlayer ++) {
                 var tval = tinfo[tlayer];
                 if(tval) {
-                    this._map_strr.set_tile(x, y, tlayer, tval);
+                    this._map_strr.set_tile(tx, ty, tlayer, tval);
                 }
             }
         });
@@ -79,10 +80,11 @@ var tile_board = (function() {
             for(var tlayer = 0; tlayer < tinfo.length; tlayer ++) {
                 var tval = tinfo[tlayer];
                 if(tval) {
-                    this._map_strr.set_tile(x, y, tlayer, clean ? 0 : tval);
+                    this._map_strr.set_tile(tx, ty, tlayer, clean ? 0 : tval);
                 }
             }
         });
+        this._map_strr.refresh_map();
     };
     
     var map_pool_util = {
@@ -99,7 +101,6 @@ var tile_board = (function() {
         this._map = new tile_map([map_strr, map_pool_util]);
         this._binfo = board_info;
         this._builder = new map_builder(this._binfo.map, map_strr);
-        this._init_deck();
     }
     
     tile_board.prototype._panic = function() {
@@ -110,7 +111,7 @@ var tile_board = (function() {
         return $gameMap.mapId();
     };
     
-    tile_board.prototype._init_deck = function() {
+    tile_board.prototype.init_deck = function() {
         this._deck = new tile_deck(this._binfo.seed);
         var deck_pool = [];
         if(this._store.get('mapid') == mapid()) {
@@ -164,16 +165,17 @@ var g_t_board = new tile_board({
     },
     map: {
         tileset: [
-            ['none', [1000, 48, 3]],
-            ['land', [2000, 48, 1]],
-            ['wall', 3000],
-            ['cent', [4000, 48, 1]],
-            ['port', [5000, 1], 1],
+            ['none', [2432, 48, 3]],
+            ['land', [2816, 48, 1]],
+            ['wall', [2432, 48, 3]],
+            ['cent', [2912, 48, 1]],
+            ['port', [4256, 48, 1]],
         ],
         prvset: [
-            ['land', 6000, 3],
-            ['wall', 6200, 3],
-            ['cent', 6300, 3],
+            ['land', 48, 1],
+            ['wall', 51, 1],
+            ['cent', 52, 1],
+            ['warn', 50, 1],
         ],
     },
 }, g_map_s);
