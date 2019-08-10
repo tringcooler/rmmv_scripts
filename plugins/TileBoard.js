@@ -1,6 +1,7 @@
 var tile_board = (function() {
     
     var TYPA = {
+        none: 0x00,
         land: 0x04,
         wall: 0x08,
         port: 0x10,
@@ -11,18 +12,60 @@ var tile_board = (function() {
     
     var a2e = a => (a & TYPA.msk_evnt) / (TYPA.msk_area + 1);
     
-    var map_pool_hook = [
-        g_map_s, {
-            get: (pos, map) => map.get_tile(pos[0], pos[1], 5),
-            set: (pos, map, val) => map.get_tile(pos[0], pos[1], 5, val),
-            each: (map, cb) => map.layer_each(5, cb),
-        },
-    ];
+    function map_builder(map_info, map_strr) {
+        this._map_strr = map_strr;
+        this._minfo = map;
+    }
     
-    function tile_board(board_info) {
+    map_builder.prototype._init_decorator = function() {
+        this._decorators = [];
+        for(var [tname, tinfo] in this._minfo.tileset.base) {
+            if(tinfo instanceof Array) {
+                this._decorators.push(new tile_decorator(this._map_strr, ...tinfo));
+            }
+        }
+    };
+    
+    map_builder.prototype._decorate = function(rng) {
+        for(var dec of this._decorators) {
+            dec.decorate(...rng);
+        }
+    };
+    
+    map_builder.prototype._get_tileset_base = function(area) {
+        for(var [tname, tinfo] in this._minfo.tileset.base) {
+            var tmsk = TYPA.tname;
+            if(area & tmsk) {
+                if(tinfo instanceof Array) {
+                    return tinfo[0];
+                } else {
+                    return tinfo;
+                }
+            }
+        }
+        return null;
+    };
+    
+    map_builder.prototype.build = function(rng) {
+    };
+    
+    map_builder.prototype.preview = function(rng) {
+    };
+    
+    var map_pool_util = {
+        get: (pos, map) => map.get_tile(pos[0], pos[1], 5),
+        set: (pos, map, val) => map.get_tile(pos[0], pos[1], 5, val),
+        each: (map, cb) => map.layer_each(5, cb),
+    };
+    
+    var tile_map = tile_maker.map;
+    var tile_deck = tile_maker.deck;
+    
+    function tile_board(board_info, map_strr) {
         this._store = new store_pool('tile_board');
-        this._map = new tile_map(map_pool_hook);
+        this._map = new tile_map([map_strr, map_pool_util]);
         this._binfo = board_info;
+        this._builder = new map_builder(this._binfo.map, map_strr);
         this._init_deck();
     }
     
@@ -51,10 +94,19 @@ var tile_board = (function() {
     };
     
     tile_board.prototype.preview_on = function(pos, dpos) {
-        // TODO: peek tile
+        var tile = this._deck.peek_tile();
+        if(!tile) return null;
+        var dst_pos = this._map.tile_pos(pos, dpos, tile);
+        if(!dst_pos) return null;
+        var prv_apool = this._map.preview_tile(dst_pos, tile);
+        //TODO: show preview
     };
     
     tile_board.prototype.put_tile_on = function(pos, dpos) {
+        var tile = this._deck.peek_tile();
+        if(!tile) return null;
+        this._map.put_tile(pos, dpos, tile);
+        //TODO: draw map
     };
     
     testf = function() {
@@ -63,3 +115,24 @@ var tile_board = (function() {
     return tile_board;
     
 })();
+
+var g_t_board = new tile_board({
+    seed: 123,
+    units: [30, 15, 10, 5],
+    events: {
+        0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
+    },
+    map: {
+        tileset: {
+            base: [
+                ['cent', [4000, 48, 1]],
+                ['wall', 3000],
+                ['land', [2000, 48, 1]],
+                ['none', [1000, 48, 3]],
+            ],
+            deco: [
+                ['port', [5000, 1]],
+            ],
+        }
+    },
+}, g_map_s);
