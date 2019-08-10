@@ -165,7 +165,25 @@ var tile_board = (function() {
         this._builder.build(tile.range(pos));
     };
     
-    testf = function() {
+    tile_board.prototype._hook_plugin = function() {
+        plugin_util.hook((command, args, interp) => {
+            if(command == 'tile_board') {
+                var ga = () => plugin_util.gval(args.shift());
+                var cmd = ga();
+                if(cmd == 'init') {
+                    this.init_deck();
+                } else if(cmd == 'prv') {
+                    if(args[0] == 'off') {
+                        this.preview_off();
+                    } else {
+                        var pos = [0, 0].map(ga);
+                        var dpos = [0, 0].map(ga);
+                    }
+                } else if(cmd == 'put') {
+                    this.put_tile();
+                }
+            }
+        });
     };
     
     return tile_board;
@@ -182,9 +200,10 @@ var g_t_board = new tile_board({
         tileset: [
             ['none', [2432, 48, 3]],
             ['land', [2816, 48, 1]],
-            ['wall', [2432, 48, 3]],
-            ['cent', [2912, 48, 1]],
             ['port', [4256, 48, 1], 1],
+            ['wall', [2432, 48, 3]],
+            ['wall', 0, 1],
+            ['cent', [2912, 48, 1]],
         ],
         prvset: [
             ['land', 48, 3],

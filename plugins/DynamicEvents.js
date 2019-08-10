@@ -133,6 +133,8 @@ var dynamic_events = (function() {
     
     dynamic_events.prototype.emit_ev = function(interp, ge_id) {
         var tar_ev = g_ev()[ge_id];
+        if(!tar_ev) return;
+        tar_ev.refresh();
         if(!tar_ev.page()) return;
         interp.setupChild(tar_ev.list(), ge_id);
     };
