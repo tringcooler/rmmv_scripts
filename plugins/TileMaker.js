@@ -731,6 +731,11 @@ var tile_maker = (function() {
             for(var [pos, code] of tu_seq) {
                 this._setup_unit(pos, code);
             }
+            this._range = this._apool.range();
+        };
+        
+        tile_area.prototype.range = function() {
+            return this._range;
         };
         
         tile_area.prototype.edge_cent = function(dir) {

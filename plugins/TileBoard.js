@@ -131,15 +131,22 @@ var tile_board = (function() {
         if(!tile) return null;
         var dst_pos = this._map.tile_pos(pos, dpos, tile);
         if(!dst_pos) return null;
-        var prv_apool = this._map.preview_tile(dst_pos, tile);
-        //TODO: show preview
+        this._prv_apool = this._map.preview_tile(dst_pos, tile);
+        this._builder.preview(this._prv_apool);
+    };
+    
+    tile_board.prototype.preview_off = function() {
+        if(this._prv_apool) {
+            this._builder.preview(this._prv_apool, true);
+        }
+        this._prv_apool = null;
     };
     
     tile_board.prototype.put_tile_on = function(pos, dpos) {
         var tile = this._deck.peek_tile();
         if(!tile) return null;
         this._map.put_tile(pos, dpos, tile);
-        //TODO: draw map
+        this._builder.build(tile.range());
     };
     
     testf = function() {
