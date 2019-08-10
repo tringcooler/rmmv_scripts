@@ -36,7 +36,7 @@ var tile_maker = (function() {
     };
     
     var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.msk_pass);
-    var prv_a_ow = (bot, top) => (((bot & TYPA.enti) & (top & TYPA.enti)) ? TYPA_P.warn : 0) | prv_a(top);
+    var prv_a_ow = (bot, top) => (((bot & (TYPA.msk_supp | TYPA.msk_terr)) && (top & TYPA.enti)) ? TYPA_P.warn : 0) | prv_a(top);
     
     var TYPC = {
         name_wall: ['left', 'up', 'right', 'down'],
