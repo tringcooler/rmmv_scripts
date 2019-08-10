@@ -107,6 +107,7 @@ var tile_board = (function() {
         this._map = new tile_map([map_strr, map_pool_util]);
         this._binfo = board_info;
         this._builder = new map_builder(this._binfo.map, map_strr);
+        this._hook_plugin();
     }
     
     tile_board.prototype._panic = function() {
@@ -178,6 +179,7 @@ var tile_board = (function() {
                     } else {
                         var pos = [0, 0].map(ga);
                         var dpos = [0, 0].map(ga);
+                        this.preview_on(pos, dpos);
                     }
                 } else if(cmd == 'put') {
                     this.put_tile();
