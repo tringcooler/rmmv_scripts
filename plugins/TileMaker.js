@@ -734,8 +734,11 @@ var tile_maker = (function() {
             this._range = this._apool.range();
         };
         
-        tile_area.prototype.range = function() {
-            return this._range;
+        tile_area.prototype.range = function(pos = null) {
+            if(!pos) {
+                pos = [0, 0];
+            }
+            return [posadd(pos, this._range), this._range.slice(2)];
         };
         
         tile_area.prototype.edge_cent = function(dir) {
@@ -776,14 +779,14 @@ var tile_maker = (function() {
             return possub(slot_pos, ta_ec_pos);
         };
         
-        tile_map.prototype.put_tile = function(pos, dpos, ta) {
+        tile_map.prototype.put_tile = function(pos, ta) {
             if((pos instanceof tile_area) && !this._apool.get([0, 0])) {
                 ta = pos;
-                return this.set_tile([0, 0], ta);
+                pos = [0, 0];
             }
-            var dst_pos = this.tile_pos(pos, dpos, ta);
-            if(dst_pos === null) return null;
-            return this.set_tile(dst_pos, ta);
+            if(pos && ta) {
+                this.set_tile(pos, ta);
+            }
         };
         
         tile_map.prototype.preview_tile = function(pos, ta) {

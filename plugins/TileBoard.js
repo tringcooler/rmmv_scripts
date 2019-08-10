@@ -25,14 +25,14 @@ var tile_board = (function() {
         this._decorators = [];
         for(var [tname, tinfo, tlayer] of this._minfo.tileset) {
             if(tinfo instanceof Array) {
-                this._decorators.push(new tile_decorator(this._map_strr, ...tinfo));
+                this._decorators.push([new tile_decorator(this._map_strr, ...tinfo), tlayer ? tlayer : 0]);
             }
         }
     };
     
     map_builder.prototype._decorate = function(rng) {
-        for(var dec of this._decorators) {
-            dec.decorate([rng[0], rng[1], 0], [rng[2], rng[3]]);
+        for(var [dec, layer] of this._decorators) {
+            dec.decorate(rng[0].concat(layer), rng[1]);
         }
     };
     
@@ -53,7 +53,7 @@ var tile_board = (function() {
     };
     
     var rng_each = function(rng, cb) {
-        var [left, top, width, height] = rng;
+        var [[left, top], [width, height]] = rng;
         for(var x = left; x < left + width; x ++) {
             for(var y = top; y < top + height; y ++) {
                 if(cb(x, y) === false) break;
@@ -67,7 +67,7 @@ var tile_board = (function() {
             var tinfo = get_tiles_info(area, this._minfo.tileset);
             for(var tlayer = 0; tlayer < tinfo.length; tlayer ++) {
                 var tval = tinfo[tlayer];
-                if(tval) {
+                if(tval || tlayer > 0) {
                     this._map_strr.set_tile(tx, ty, tlayer, tval);
                 }
             }
@@ -140,8 +140,7 @@ var tile_board = (function() {
         if(!dst_pos) return null;
         var prv_pool = this._map.preview_tile(dst_pos, tile);
         this._prv_info = {
-            pos: pos,
-            dpos: dpos,
+            pos: dst_pos,
             pool: prv_pool,
             valid: this._builder.preview(prv_pool, false),
         };
@@ -157,14 +156,13 @@ var tile_board = (function() {
     tile_board.prototype.put_tile = function() {
         if(!this._prv_info) return null;
         var pos = this._prv_info.pos;
-        var dpos = this._prv_info.dpos;
         var valid = this._prv_info.valid;
         this.preview_off();
         if(!valid) return null;
         var tile = this._deck.draw_tile();
         if(!tile) return null;
-        this._map.put_tile(pos, dpos, tile);
-        this._builder.build(tile.range());
+        this._map.put_tile(pos, tile);
+        this._builder.build(tile.range(pos));
     };
     
     testf = function() {
@@ -186,13 +184,13 @@ var g_t_board = new tile_board({
             ['land', [2816, 48, 1]],
             ['wall', [2432, 48, 3]],
             ['cent', [2912, 48, 1]],
-            ['port', [4256, 48, 1]],
+            ['port', [4256, 48, 1], 1],
         ],
         prvset: [
-            ['land', 48, 1],
-            ['wall', 51, 1],
-            ['cent', 52, 1],
-            ['warn', 50, 1],
+            ['land', 48, 3],
+            ['wall', 51, 3],
+            ['cent', 52, 3],
+            ['warn', 50, 3],
         ],
         prvwarn: 50,
     },
