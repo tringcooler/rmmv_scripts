@@ -99,7 +99,7 @@ var tile_decorator = (function() {
             var siz = args[1];
             for(var y = 0; y < siz[1]; y++) {
                 for(var x = 0; x < siz[0]; x++) {
-                    pos_seq.push([pos[0] + x, pos[1] + y, pos[2]]);
+                    pos_seq.push([pos[0] + x, pos[1] + y, pos[2] ? pos[2] : 0]);
                 }
             }
         } else {
