@@ -234,12 +234,32 @@ var map_stirrer = (function() {
         }
     };
     
+    map_stirrer.prototype.on_load = function(cb, mid = null) {
+        var eidx = this._events_onload.findIndex(v => v[0] === cb);
+        if(eidx < 0) {
+            this._events_onload.push([cb, mid]);
+        } else {
+            this._events_onload[eidx][1] = mid;
+        }
+    };
+    
+    map_stirrer.prototype.off_load = function(cb) {
+        var eidx = this._events_onload.findIndex(v => v[0] === cb);
+        if(eidx < 0) return;
+        this._events_onload.splice(eidx, 1);
+    };
+    
     map_stirrer.prototype._hook_map_load = function() {
+        this._events_onload = [];
         var _o_dm_onload = DataManager.onLoad;
         DataManager.onLoad = object => {
             _o_dm_onload.call(DataManager, object);
             if(object === $dataMap) {
+                var mid = mapid();
                 this.resume_tiles();
+                for(var [ecb, emid] of this._events_onload) {
+                    
+                }
             }
         };
     };
