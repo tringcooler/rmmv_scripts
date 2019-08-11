@@ -74,7 +74,7 @@ var dynamic_events = (function() {
         if(dst_ev) {
             this._nevents.set(mapid(), dst_ev.id, args);
         }
-        return dst_ev;
+        return dst_ev.id;
     };
     
     dynamic_events.prototype.del_event = function(de_idx) {
