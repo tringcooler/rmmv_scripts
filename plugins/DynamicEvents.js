@@ -118,6 +118,12 @@ var dynamic_events = (function() {
     };
     
     dynamic_events.prototype.epool = function(ev) {
+        if(typeof ev == 'string') {
+            ev = parseInt(ev);
+        }
+        if(typeof ev == 'number' && !isNaN(ev)) {
+            ev = g_ev()[ev];
+        }
         if(!ev) return undefined;
         if(!ev._plugin_dynamic_events_pool) {
             ev._plugin_dynamic_events_pool = {};
@@ -126,9 +132,7 @@ var dynamic_events = (function() {
     };
     
     dynamic_events.prototype.this_epool = function(interp) {
-        var this_ev = g_ev()[interp._eventId];
-        if(!this_ev) return undefined;
-        return this.epool(this_ev);
+        return this.epool(interp._eventId);
     };
     
     dynamic_events.prototype.emit_ev = function(interp, ge_id) {
