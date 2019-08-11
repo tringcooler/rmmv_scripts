@@ -100,9 +100,13 @@ var tile_maker = (function() {
             return a => eq ? ((a & msk) == dst) : ((a & msk) != dst);
         };
         
+        var check_filters = function(area, filters) {
+            return !(filters.length > 0 && !filters.every(f => f(area)));
+        };
+        
         area_pool.prototype.each = function(cb, ...filters) {
             this._pool_util.each(this._pool, (kx, ky, area) => {
-                if(!area || (filters.length > 0 && !filters.every(f => f(area)))) return;
+                if(!area || !check_filters(area, filters)) return;
                 return cb(parseInt(kx), parseInt(ky), area);
             }, 2);
         };
@@ -144,6 +148,22 @@ var tile_maker = (function() {
             }, ...filters);
             return rpos;
         }
+        
+        area_pool.prototype.first_dir = function(pos, dir, ...filters) {
+            var dir = dir.map(v => Math.sign(v));
+            if(dir[0] == 0 && dir[1] == 0) return null;
+            var tpos = pos;
+            while(true) {
+                var ta = this.get(tpos);
+                if(!ta) {
+                    return null;
+                }
+                if(check_filters(ta, filters)) {
+                    return tpos;
+                }
+                var tpos = posadd(tpos, dir);
+            }
+        };
         
         area_pool.prototype.repr = function() {
             var [left, top, width, height] = this.range();
@@ -742,7 +762,7 @@ var tile_maker = (function() {
         };
         
         tile_area.prototype.edge_cent = function(dir) {
-            var slot_pos = this._apool.any_dir([0, 0], dir, this._apool.filter(TYPA.slot));
+            var slot_pos = this._apool.first_dir([0, 0], dir, this._apool.filter(TYPA.slot));
             if(slot_pos === null) return null;
             var rstep = dir.map(v => - Math.sign(v) * 2);
             return posadd(slot_pos, rstep);
@@ -773,7 +793,7 @@ var tile_maker = (function() {
         tile_map.prototype.tile_pos = function(pos, dpos, ta) {
             if(!this._valid_put(pos, dpos)) return null;
             var dir = possub(dpos, pos);
-            var slot_pos = this._apool.any_dir(pos, dir, this._apool.filter(TYPA.slot));
+            var slot_pos = this._apool.first_dir(pos, dir, this._apool.filter(TYPA.slot));
             if(slot_pos === null) return null;
             var ta_ec_pos = ta.edge_cent(posneg(dir));
             return possub(slot_pos, ta_ec_pos);
