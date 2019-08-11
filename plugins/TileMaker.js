@@ -22,6 +22,7 @@ var tile_maker = (function() {
     
     var a_ow = (bot, top) => ((bot | top) & TYPA.msk_ovwr)
         | Math.min((bot & TYPA.port) + (top & TYPA.port), TYPA.over_p)
+        | ((bot | top) &  TYPA.over_p)
         | (((bot | top) & TYPA.msk_terr) ? 0 : ((bot | top) & TYPA.slot))
         | Math.max(bot & TYPA.msk_terr, top & TYPA.msk_terr, Math.min((bot & TYPA.msk_supp) + (top & TYPA.msk_supp), TYPA.land));
     
@@ -84,6 +85,10 @@ var tile_maker = (function() {
             if(!src) src = 0;
             var dst = a_ow(src, area);
             this._pool_util.set(pos, this._pool, dst);
+        };
+        
+        area_pool.prototype.set_raw = function(pos, area) {
+            this._pool_util.set(pos, this._pool, area);
         };
         
         area_pool.prototype.get = function(pos) {
@@ -825,6 +830,15 @@ var tile_maker = (function() {
                 }
             });
             return prv;
+        };
+        
+        tile_map.prototype.break_wall = function(pos) {
+            var wa = this._apool.get(pos);
+            if(!((wa & TYPA.wall) && (wa & (TYPA.port | TYPA.over_p)))) return null;
+            wa &= ~TYPA.wall;
+            wa |= (wa & TYPA.port) ? TYPA.supp_e : 0;
+            wa |= (wa & TYPA.over_p) ? TYPA.land : 0;
+            this._apool.set_raw(pos, wa);
         };
         
         return tile_map;

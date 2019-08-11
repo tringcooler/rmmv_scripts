@@ -165,6 +165,11 @@ var tile_board = (function() {
         this._builder.build(tile.range(pos));
     };
     
+    tile_board.prototype.break_wall = function(pos) {
+        if(this._map.break_wall(pos) === null) return null;
+        this._builder.build([[pos[0] - 1, pos[1] - 1], [3, 3]]);
+    };
+    
     tile_board.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'tile_board') {
@@ -180,6 +185,9 @@ var tile_board = (function() {
                     }
                 } else if(cmd == 'put') {
                     this.put_tile();
+                } else if(cmd == 'brk') {
+                    var pos = [0, 0].map(ga);
+                    this.break_wall(pos);
                 }
             }
         });
