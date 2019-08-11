@@ -42,6 +42,9 @@ var tile_decorator = (function() {
                 }
             }
         }
+        var _swp = vnum_seq[0x47];
+        vnum_seq[0x47] = vnum_seq[0x4e];
+        vnum_seq[0x4e] = _swp;
         for(var i = 0; i < rng; i++) {
             mod_seq[i] = vnum_seq[mod_seq[i]];
         }
