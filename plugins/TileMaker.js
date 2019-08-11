@@ -641,7 +641,7 @@ var tile_maker = (function() {
         
         var tidx2tcode = [
             '11,11', '111,001', '111,100', '110,011', '011,110', '111,010', '1111'
-        ].map(c => [...Array(4)].map((v, i) => [i, c].join(','))).flat();
+        ].map(c => [...Array(4)].map((v, i) => [i, c].join(','))).reduce((r, v) => r.concat(v), []); //.flat();
         tile_deck.prototype.rand_tcode = function() {
             return tidx2tcode[this._rng.randint(tidx2tcode.length - 1)];
         };
