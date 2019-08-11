@@ -686,7 +686,7 @@ var tile_maker = (function() {
         };
         
         tile_deck.prototype.fill_events = function(evnums) {
-            this._epool = evnums;
+            this._epool = Object.assign({}, evnums);
             var empty_num = this._t_unit_num() - this._event_num();
             if(empty_num < 0) return null;
             Object.assign(this._epool, {0: empty_num});

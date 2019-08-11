@@ -254,7 +254,7 @@ var map_stirrer = (function() {
         DataManager.onLoad = object => {
             _o_dm_onload.call(DataManager, object);
             if(object === $dataMap) {
-                var mid = mapid();
+                var mid = cscene()._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
                 this.resume_tiles();
                 for(var ev of this._events_onload) {
                     ev(mid);

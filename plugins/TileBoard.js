@@ -109,7 +109,7 @@ var tile_board = (function() {
         this._builder = new map_builder(this._binfo.map, map_strr);
         this._hook_plugin();
         map_strr.on_load((mid) => {
-            this.init_deck();
+            this.init_deck(mid);
         });
     }
     
@@ -117,14 +117,10 @@ var tile_board = (function() {
         throw Error('TileBoard Panic');
     };
     
-    var mapid = function() {
-        return $gameMap.mapId();
-    };
-    
-    tile_board.prototype.init_deck = function() {
+    tile_board.prototype.init_deck = function(mapid) {
         this._deck = new tile_deck(this._binfo.seed);
         var deck_pool = [];
-        if(this._store.get('mapid') == mapid()) {
+        if(this._store.get('mapid') == mapid) {
             deck_pool = this._store.get('deck_pool');
             this._deck.restore(deck_pool);
         } else {
@@ -133,7 +129,7 @@ var tile_board = (function() {
             if(this._deck.make_tiles() === null) this._panic();
             if(this._deck.fill_events(this._binfo.events) === null) this._panic();
             this._store.set('deck_pool', deck_pool);
-            this._store.set('mapid', mapid());
+            this._store.set('mapid', mapid);
         }
     };
     
