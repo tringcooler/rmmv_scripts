@@ -15,8 +15,9 @@ var tile_board = (function() {
     
     var AREA_LAYER = 5;
     
-    function map_builder(map_info, map_strr) {
+    function map_builder(map_info, map_strr, dyn_evs) {
         this._map_strr = map_strr;
+        this._dyn_evs = dyn_evs;
         this._minfo = map_info;
         this._init_decorator();
     }
@@ -52,6 +53,31 @@ var tile_board = (function() {
         return tiles_info;
     };
     
+    var get_event_info = function(area, events) {
+        var ev_info = events[a2e(area)];
+        if(!ev_info) return [null];
+        return ev_info;
+    };
+    
+    map_builder.prototype._new_event = function(pos, area, events) {
+        var [src_evid, ssw_id, init_pool] = get_event_info(area, events);
+        if(src_evid === null) return null;
+        var dst_evid = this._dyn_evs.clone_event(src_evid, pos[0], pos[1]);
+        this._dyn_evs.refresh_events();
+        if(ssw_id) {
+            for(var sid of ssw_id) {
+                plugin_util.evsw(dst_evid, sid, true);
+            }
+        }
+        if(init_pool) {
+            for(var k in init_pool) {
+                if(!init_pool.hasOwnProperty(k)) continue;
+                this._dyn_evs.epool(dst_evid)[k] = init_pool[k];
+            }
+        }
+        return dst_evid;
+    };
+    
     var rng_each = function(rng, cb) {
         var [[left, top], [width, height]] = rng;
         for(var x = left; x < left + width; x ++) {
@@ -70,6 +96,9 @@ var tile_board = (function() {
                 if(tval || tlayer > 0) {
                     this._map_strr.set_tile(tx, ty, tlayer, tval);
                 }
+            }
+            if(this._new_event([tx, ty], area, this._minfo.events) !== null) {
+                this._map_strr.set_tile(tx, ty, AREA_LAYER, area & ~TYPA.msk_evnt);
             }
         });
         this._decorate(rng);
@@ -102,11 +131,11 @@ var tile_board = (function() {
     var tile_map = tile_maker.map;
     var tile_deck = tile_maker.deck;
     
-    function tile_board(board_info, map_strr) {
+    function tile_board(board_info, map_strr, dyn_evs) {
         this._store = new store_pool('tile_board');
         this._map = new tile_map([map_strr, map_pool_util]);
         this._binfo = board_info;
-        this._builder = new map_builder(this._binfo.map, map_strr);
+        this._builder = new map_builder(this._binfo.map, map_strr, dyn_evs);
         this._hook_plugin();
         map_strr.on_load((mid) => {
             this.init_deck(mid);
@@ -219,5 +248,12 @@ var g_t_board = new tile_board({
             ['warn', 50, 3],
         ],
         prvwarn: 50,
+        events: {
+            0x11: [5, 'c', {mhp: 1}],
+            0x12: [5, 'c', {mhp: 2}],
+            0x13: [5, 'c', {mhp: 3}],
+            0x14: [5, 'c', {mhp: 4}],
+            0x15: [5, 'c', {mhp: 5}],
+        },
     },
-}, g_map_s);
+}, g_map_s, g_d_ev);
