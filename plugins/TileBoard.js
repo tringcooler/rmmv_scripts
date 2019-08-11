@@ -108,6 +108,9 @@ var tile_board = (function() {
         this._binfo = board_info;
         this._builder = new map_builder(this._binfo.map, map_strr);
         this._hook_plugin();
+        map_strr.on_load((mid) => {
+            this.init_deck();
+        });
     }
     
     tile_board.prototype._panic = function() {
@@ -171,9 +174,7 @@ var tile_board = (function() {
             if(command == 'tile_board') {
                 var ga = () => plugin_util.gval(args.shift());
                 var cmd = ga();
-                if(cmd == 'init') {
-                    this.init_deck();
-                } else if(cmd == 'prv') {
+                if(cmd == 'prv') {
                     if(args[0] == 'off') {
                         this.preview_off();
                     } else {
