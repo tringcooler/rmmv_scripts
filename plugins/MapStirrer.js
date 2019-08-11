@@ -234,19 +234,18 @@ var map_stirrer = (function() {
         }
     };
     
-    map_stirrer.prototype.on_load = function(cb, mid = null) {
-        var eidx = this._events_onload.findIndex(v => v[0] === cb);
+    map_stirrer.prototype.on_load = function(cb) {
+        var eidx = this._events_onload.indexOf(cb);
         if(eidx < 0) {
-            this._events_onload.push([cb, mid]);
-        } else {
-            this._events_onload[eidx][1] = mid;
+            this._events_onload.push(cb);
         }
     };
     
     map_stirrer.prototype.off_load = function(cb) {
-        var eidx = this._events_onload.findIndex(v => v[0] === cb);
-        if(eidx < 0) return;
-        this._events_onload.splice(eidx, 1);
+        var eidx = this._events_onload.indexOf(cb);
+        if(eidx >= 0) {
+            this._events_onload.splice(eidx, 1);
+        }
     };
     
     map_stirrer.prototype._hook_map_load = function() {
@@ -257,8 +256,8 @@ var map_stirrer = (function() {
             if(object === $dataMap) {
                 var mid = mapid();
                 this.resume_tiles();
-                for(var [ecb, emid] of this._events_onload) {
-                    
+                for(var ev of this._events_onload) {
+                    ev(mid);
                 }
             }
         };
