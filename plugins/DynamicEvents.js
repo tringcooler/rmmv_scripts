@@ -49,13 +49,14 @@ var dynamic_events = (function() {
         reset_charas();
     };
     
+    var mod = (a, b) => ((a, b) => a * b < 0 ? a + b : a)(a % b, b);
     var _clone_event = function(src_ev, id, x, y) {
         var dst_ev = Object.assign({}, src_ev);
         if(x !== null) {
-            dst_ev.x = x;
+            dst_ev.x = mod(x, $gameMap.width());
         }
         if(y !== null) {
-            dst_ev.y = y;
+            dst_ev.y = mod(y, $gameMap.height());
         }
         dst_ev.id = id;
         return dst_ev;
