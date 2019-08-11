@@ -139,6 +139,17 @@ var plugin_util = (function() {
         return $gameSwitches.value(id);
     };
     
+    var evsw = function(evid, sid, s = null) {
+        evid = parseInt(evid);
+        sid = (sid && sid.toUpperCase && sid.toUpperCase());
+        if(isNaN(evid) || 'ABCD'.split('').indexOf(sid) < 0) return false;
+        var key = [$gameMap.mapId(), evid, sid];
+        if(s !== null) {
+            $gameSelfSwitches.setValue(key, !!s);
+        }
+        return $gameSelfSwitches.value(key);
+    };
+    
     var hook = function(func) {
         var _o_plg_cmd = Game_Interpreter.prototype.pluginCommand;
         Game_Interpreter.prototype.pluginCommand = function(command, args) {
@@ -151,6 +162,7 @@ var plugin_util = (function() {
         'gval': gval,
         'sval': sval,
         'sw': sw,
+        'evsw': evsw,
         'hook': hook,
     };
     
