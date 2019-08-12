@@ -27,21 +27,32 @@ var ui_label = (function() {
             if(!this._label_text) {
                 return '';
             } else if(this._label_text instanceof Function) {
-                return this._label_text();
+                var otext = this._last_label_text;
+                var text = this._label_text();
+                this._last_label_text = text;
+                if(otext && otext != text) {
+                    this._fit_text(text);
+                }
+                return text;
             } else {
                 return this._label_text;
             }
         };
         
-        ui_label_base.prototype.set_text = function(text) {
-            if(!text) return;
-            this._label_text = text;
-            text = this.label_text();
+        ui_label_base.prototype._fit_text = function(text) {
             var padding = this.standardPadding() * 2;
             this.width = this.textWidth(text.split('\n')[0]) + padding;
             this.height = this.calcTextHeight({text: text}, true) + padding;
             this._set_pos();
             this.createContents();
+        };
+        
+        ui_label_base.prototype.set_text = function(text) {
+            if(!text) return;
+            this._last_label_text = null;
+            this._label_text = text;
+            text = this.label_text();
+            this._fit_text(text);
         };
         
         ui_label_base.prototype._set_pos = function(pos) {
@@ -250,6 +261,7 @@ var ui_label = (function() {
                 src_linfo.text = text;
                 if(type != 'player') {
                     src_linfo.pos = args[0];
+                    this._labels_pool[key].set_pos(args[0]);
                 }
             } else {
                 if(type == 'player') {
