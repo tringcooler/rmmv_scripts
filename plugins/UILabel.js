@@ -165,16 +165,31 @@ var ui_label = (function() {
             this._store = new store_pool('ui_label');
             this._dyn_evs = dyn_evs;
             this._labels_pool = {};
-            this._store.load.on(this.rebind.bind(this));
+            this._store.load2.on(this.rebind.bind(this));
         }
         
-        label_rebinder.prototype._new_ev = function(evid, force = false) {
+        label_rebinder.prototype._set_lpool = function(key, lb) {
+            if(this._labels_pool[key]) {
+                this._labels_pool[key].remove();
+            }
+            this._labels_pool[key] = lb;
+        };
+        
+        label_rebinder.prototype._new_ev = function(evid, init_text = null) {
             var epool = this._dyn_evs.epool(evid);
-            if(!epool || (!force && !epool['@ui_label'])) return;
+            if(!epool) return;
+            var src_text = epool['@ui_label'];
+            if(init_text) {
+                epool['@ui_label'] = init_text;
+                if(src_text) {
+                    return;
+                }
+            } else if(!src_text) {
+                return;
+            }
             var lb = new ui_label_ev(() => epool['@ui_label']);
             lb.bind(evid);
-            this._labels_pool['ev_' + evid] = lb;
-            return epool;
+            this._set_lpool('ev_' + evid, lb);
         };
         
         label_rebinder.prototype._rebind_ev = function() {
@@ -192,13 +207,13 @@ var ui_label = (function() {
             }
             lb.set_pos(linfo.pos);
             lb.bind();
-            this._labels_pool[key] = lb;
+            this._set_lpool(key, lb);
         };
         
         label_rebinder.prototype._new_pl = function(linfo, key) {
             var lb = new ui_label_ev(() => linfo.text);
             lb.bind(0);
-            this._labels_pool[key] = lb;
+            this._set_lpool(key, lb);
         };
         
         label_rebinder.prototype._rebind_ui = function(mid) {
@@ -225,20 +240,26 @@ var ui_label = (function() {
             };
             if(type == 'event') {
                 var evid = key;
-                var epool = this._new_ev(evid, true);
-                if(!epool) return null;
-                epool['@ui_label'] = text;
+                var epool = this._new_ev(evid, text);
                 return;
             }
             var mid = this._store.mapid();
-            if(this._store.get(mid, 'labels_info', key)) return null;
-            if(type == 'player') {
-                this._new_pl(linfo, key);
+            var src_linfo = this._store.get(mid, 'labels_info', key);
+            if(src_linfo) {
+                if(src_linfo.type != type) return null;
+                src_linfo.text = text;
+                if(type != 'player') {
+                    src_linfo.pos = args[0];
+                }
             } else {
-                linfo.pos = args[0];
-                this._new_ui(linfo, key);
+                if(type == 'player') {
+                    this._new_pl(linfo, key);
+                } else {
+                    linfo.pos = args[0];
+                    this._new_ui(linfo, key);
+                }
+                this._store.set(mid, 'labels_info', key, linfo);
             }
-            this._store.set(mid, 'labels_info', key, linfo);
         };
         
         label_rebinder.prototype.remove = function(key) {
