@@ -65,9 +65,7 @@ var pool_util = (function() {
 
 var store_pool = (function() {
     
-    function ev_onload() {
-        this._hook_map_load();
-    }
+    function ev_onload() {}
     
     ev_onload.prototype.on = function(cb) {
         var eidx = this._events_onload.indexOf(cb);
@@ -97,11 +95,34 @@ var store_pool = (function() {
         };
     };
     
+    ev_onload.prototype._hook_scene_load = function() {
+        this._events_onload = [];
+        var _o_sc_onload = Scene_Map.prototype.onMapLoaded;
+        var self = this;
+        Scene_Map.prototype.onMapLoaded = function() {
+            _o_sc_onload.call(this);
+            var mid = $gameMap.mapId();
+            for(var ev of self._events_onload) {
+                ev(mid);
+            }
+        };
+    };
+    
+    ev_onload.prototype.hook = function(type) {
+        if(type == 'map') {
+            this._hook_map_load();
+        } else if(type == 'scene') {
+            this._hook_scene_load();
+        }
+        return this;
+    };
+    
     function store_pool(name) {
         this._name = name;
     }
     
-    store_pool.prototype.load = new ev_onload();
+    store_pool.prototype.load = (new ev_onload()).hook('map');
+    store_pool.prototype.load2 = (new ev_onload()).hook('scene');
     
     store_pool.prototype.pool = function() {
         if(!$gameVariables._plugin_store_pool) {
