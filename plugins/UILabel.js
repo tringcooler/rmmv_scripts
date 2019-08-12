@@ -16,11 +16,17 @@ var ui_label = (function(_super) {
     
     __extends(ui_label, _super);
     function ui_label(text, pos) {
+        this._standardPadding = 0;
         _super.call(this, 0, 0, 0, 0);
+        this.opacity = 0;
         this.set_anchor([0, 0]);
         this.set_text(text);
         this.set_pos([0, 0]);
     }
+    
+    ui_label.prototype.standardPadding = function() {
+        return this._standardPadding;
+    };
     
     ui_label.prototype.set_anchor = function(anchor) {
         if(anchor) {
@@ -75,7 +81,7 @@ var ui_label_map = (function(_super) {
     __extends(ui_label_map, _super);
     function ui_label_map(...args) {
         _super.call(this, ...args);
-        this.set_anchors([0.5, 1], [0.5, 0]);
+        this.set_anchors([0.5, 1.1], [0.5, 0]);
         this.set_map_pos([0, 0]);
     }
     
