@@ -51,29 +51,40 @@ var ui_label = (function(_super) {
     };
     
     ui_label.prototype.remove = function() {
-        if(this.parent) {
-            this.parent.removeChild(this);
-        }
+        return this.parent && this.parent.removeChild(this);
     };
     
-    var sp_set = () => SceneManager._scene._spriteset;
-    var ch_set = () => sp_set()._characterSprites;
-    var mp_set = () => sp_set()._tilemap;
+    return ui_label;
     
+})(Window_Base);
+
+var ui_label_ev = (function(_super) {
+    
+    __extends(ui_label_ev, _super);
+    function ui_label_ev(...args) {
+        _super.call(this, ...args);
+    }
+    
+    var ch_set = () => SceneManager._scene._spriteset._characterSprites;
     var g_ev = evid => evid ? $gameMap.event(evid) : $gamePlayer;
     
-    ui_label.prototype.bind_char = function(ch) {
+    ui_label_ev.prototype.bind_char = function(ch) {
         this.bind(ch_set().find(sp => sp._character === ch));
     };
     
-    ui_label.prototype.bind_ev = function(evid) {
+    ui_label_ev.prototype.bind_ev = function(evid) {
+        this._bind_evid = evid;
         var ev = g_ev(evid);
         if(!ev) return;
         this.bind_char(ev);
     };
     
-    return {
-        'base': ui_label,
+    ui_label_ev.prototype.on_recreate = function() {
+        if(this._bind_evid >= 0) {
+            this.bind_ev(this._bind_evid);
+        }
     };
     
-})(Window_Base);
+    return ui_label_ev;
+    
+})(ui_label);
