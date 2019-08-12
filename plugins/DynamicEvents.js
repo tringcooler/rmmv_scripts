@@ -4,7 +4,7 @@ var dynamic_events = (function() {
     function dynamic_events() {
         this._nevents = new store_pool('dynamic_events');
         this._hook_plugin();
-        this._hook_map_load();
+        this._nevents.load.on(this.resume_events.bind(this));
     }
     
     var d_ev = function() {
@@ -106,17 +106,6 @@ var dynamic_events = (function() {
                 d_ev()[de_idx] = null;
             }
         }
-    };
-    
-    dynamic_events.prototype._hook_map_load = function() {
-        var _o_dm_onload = DataManager.onLoad;
-        DataManager.onLoad = object => {
-            _o_dm_onload.call(DataManager, object);
-            if(object === $dataMap) {
-                var mid = cscene()._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
-                this.resume_events(mid);
-            }
-        };
     };
     
     dynamic_events.prototype.epool = function(ev) {

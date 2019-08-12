@@ -52,9 +52,43 @@ var pool_util = (function() {
 
 var store_pool = (function() {
     
+    function ev_onload() {
+        this._hook_map_load();
+    }
+    
+    ev_onload.prototype.on = function(cb) {
+        var eidx = this._events_onload.indexOf(cb);
+        if(eidx < 0) {
+            this._events_onload.push(cb);
+        }
+    };
+    
+    ev_onload.prototype.off = function(cb) {
+        var eidx = this._events_onload.indexOf(cb);
+        if(eidx >= 0) {
+            this._events_onload.splice(eidx, 1);
+        }
+    };
+    
+    ev_onload.prototype._hook_map_load = function() {
+        this._events_onload = [];
+        var _o_dm_onload = DataManager.onLoad;
+        DataManager.onLoad = object => {
+            _o_dm_onload.call(DataManager, object);
+            if(object === $dataMap) {
+                var mid = SceneManager._scene._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
+                for(var ev of this._events_onload) {
+                    ev(mid);
+                }
+            }
+        };
+    };
+    
     function store_pool(name) {
         this._name = name;
     }
+    
+    store_pool.prototype.load = new ev_onload();
     
     store_pool.prototype.pool = function() {
         if(!$gameVariables._plugin_store_pool) {
@@ -173,7 +207,7 @@ var map_stirrer = (function() {
     function map_stirrer() {
         this._ntiles = new store_pool('map_stirrer');
         this._hook_plugin();
-        this._hook_map_load();
+        this._ntiles.load.on(this.resume_tiles.bind(this));
     }
     
     var cscene = function() {
@@ -244,35 +278,6 @@ var map_stirrer = (function() {
             pidx = parseInt(pidx);
             mapdata()[pidx] = cpool[pidx];
         }
-    };
-    
-    map_stirrer.prototype.on_load = function(cb) {
-        var eidx = this._events_onload.indexOf(cb);
-        if(eidx < 0) {
-            this._events_onload.push(cb);
-        }
-    };
-    
-    map_stirrer.prototype.off_load = function(cb) {
-        var eidx = this._events_onload.indexOf(cb);
-        if(eidx >= 0) {
-            this._events_onload.splice(eidx, 1);
-        }
-    };
-    
-    map_stirrer.prototype._hook_map_load = function() {
-        this._events_onload = [];
-        var _o_dm_onload = DataManager.onLoad;
-        DataManager.onLoad = object => {
-            _o_dm_onload.call(DataManager, object);
-            if(object === $dataMap) {
-                var mid = cscene()._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
-                this.resume_tiles(mid);
-                for(var ev of this._events_onload) {
-                    ev(mid);
-                }
-            }
-        };
     };
     
     map_stirrer.prototype._hook_plugin = function() {

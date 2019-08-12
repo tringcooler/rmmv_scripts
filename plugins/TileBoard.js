@@ -137,9 +137,7 @@ var tile_board = (function() {
         this._binfo = board_info;
         this._builder = new map_builder(this._binfo.map, map_strr, dyn_evs);
         this._hook_plugin();
-        map_strr.on_load((mid) => {
-            this.init_deck(mid);
-        });
+        this._store.load.on(this.init_deck.bind(this));
     }
     
     tile_board.prototype._panic = function() {
