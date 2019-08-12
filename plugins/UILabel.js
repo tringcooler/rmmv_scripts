@@ -104,10 +104,14 @@ var ui_label_map = (function(_super) {
         ];
     };
     
-    ui_label_map.prototype.set_map_pos = function(pos) {
+    ui_label_map.prototype._set_map_pos_nofresh = function(pos) {
         if(pos) {
             this._map_pos = pos;
         }
+    };
+    
+    ui_label_map.prototype.set_map_pos = function(pos) {
+        this._set_map_pos_nofresh(pos);
         this.set_pos(this.screen_pos(this._map_pos));
     };
     
@@ -119,3 +123,28 @@ var ui_label_map = (function(_super) {
     return ui_label_map;
     
 })(ui_label);
+
+var ui_label_ev = (function(_super) {
+    
+    __extends(ui_label_ev, _super);
+    function ui_label_ev(...args) {
+        _super.call(this, ...args);
+    }
+    
+    var g_ev = evid => evid ? $gameMap.event(evid) : $gamePlayer;
+    
+    ui_label_ev.prototype.bind = function(evid) {
+        this._bind_evid = (evid || 0);
+        __supermethod(_super, this, 'bind')();
+    };
+    
+    ui_label_ev.prototype.refresh = function() {
+        var ev = g_ev(this._bind_evid);
+        if(!ev) return;
+        this._set_map_pos_nofresh([ev._realX, ev._realY]);
+        __supermethod(_super, this, 'refresh')();
+    };
+    
+    return ui_label_ev;
+    
+})(ui_label_map);
