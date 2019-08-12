@@ -209,6 +209,14 @@ var ui_label = (function() {
             }
         };
         
+        label_rebinder.prototype.bind_ev = function() {
+            for(var evid = 1; evid < g_map()._events.length; evid ++) {
+                if(!this._labels_pool['ev_' + evid]) {
+                    this._new_ev(evid);
+                }
+            }
+        };
+        
         label_rebinder.prototype._new_ui = function(linfo, key) {
             var lb;
             if(linfo.type == 'map') {
