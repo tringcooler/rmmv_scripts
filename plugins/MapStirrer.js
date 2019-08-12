@@ -110,6 +110,10 @@ var store_pool = (function() {
         return pool_util.set(idxs, this.pool(), val);
     };
     
+    store_pool.prototype.mapid = function() {
+        $gameMap.mapId();
+    };
+    
     return store_pool;
     
 })();
