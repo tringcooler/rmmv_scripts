@@ -237,8 +237,8 @@ var map_stirrer = (function() {
         }
     };
     
-    map_stirrer.prototype.resume_tiles = function() {
-        var cpool = this._ntiles.get(mapid());
+    map_stirrer.prototype.resume_tiles = function(mid) {
+        var cpool = this._ntiles.get(mid);
         if(!cpool) return;
         for(var pidx in cpool) {
             pidx = parseInt(pidx);
@@ -267,7 +267,7 @@ var map_stirrer = (function() {
             _o_dm_onload.call(DataManager, object);
             if(object === $dataMap) {
                 var mid = cscene()._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
-                this.resume_tiles();
+                this.resume_tiles(mid);
                 for(var ev of this._events_onload) {
                     ev(mid);
                 }

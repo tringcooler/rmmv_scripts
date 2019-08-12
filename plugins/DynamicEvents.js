@@ -89,8 +89,8 @@ var dynamic_events = (function() {
         }
     };
     
-    dynamic_events.prototype.resume_events = function() {
-        var cpool = this._nevents.get(mapid());
+    dynamic_events.prototype.resume_events = function(mid) {
+        var cpool = this._nevents.get(mid);
         if(!cpool) return;
         var de_idxs = Object.keys(cpool);
         de_idxs.sort((a, b) => a - b);
@@ -113,7 +113,8 @@ var dynamic_events = (function() {
         DataManager.onLoad = object => {
             _o_dm_onload.call(DataManager, object);
             if(object === $dataMap) {
-                this.resume_events();
+                var mid = cscene()._transfer ? $gamePlayer.newMapId() : $gameMap.mapId();
+                this.resume_events(mid);
             }
         };
     };
