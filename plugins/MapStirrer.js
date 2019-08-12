@@ -1,3 +1,16 @@
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    d.prototype = Object.create(b.prototype);
+    d.prototype.constructor = d;
+};
+
+var __supermethod = this.__supermethod || function (_spr, _slf, mth) {
+    if(_spr.prototype[mth]) {
+        return _spr.prototype[mth].bind(_slf);
+    } else {
+        return function() {};
+    }
+};
 
 var pool_util = (function() {
     

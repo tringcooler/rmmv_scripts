@@ -1,16 +1,3 @@
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    d.prototype = Object.create(b.prototype);
-    d.prototype.constructor = d;
-};
-
-var __supermethod = this.__supermethod || function (_spr, _slf, mth) {
-    if(_spr.prototype[mth]) {
-        return _spr.prototype[mth].bind(_slf);
-    } else {
-        return function() {};
-    }
-};
 
 var ui_label = (function() {
     
@@ -178,6 +165,7 @@ var ui_label = (function() {
             this._store = new store_pool('ui_label');
             this._dyn_evs = dyn_evs;
             this._labels_pool = {};
+            this._store.load.on(this.rebind.bind(this));
         }
         
         label_rebinder.prototype._new_ev = function(evid, force = false) {
@@ -271,3 +259,5 @@ var ui_label = (function() {
     return label_rebinder;
     
 })();
+
+var g_ui_label = new ui_label(g_d_ev);
