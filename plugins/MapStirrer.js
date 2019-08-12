@@ -111,7 +111,7 @@ var store_pool = (function() {
     };
     
     store_pool.prototype.mapid = function() {
-        $gameMap.mapId();
+        return $gameMap.mapId();
     };
     
     return store_pool;
