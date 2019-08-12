@@ -44,6 +44,36 @@ var ui_label = (function(_super) {
         this.drawTextEx(this._label_text, 0, 0);
     };
     
-    return ui_label;
+    ui_label.prototype.bind = function(parent) {
+        if(!parent) return;
+        this.remove();
+        parent.addChild(this);
+    };
+    
+    ui_label.prototype.remove = function() {
+        if(this.parent) {
+            this.parent.removeChild(this);
+        }
+    };
+    
+    var sp_set = () => SceneManager._scene._spriteset;
+    var ch_set = () => sp_set()._characterSprites;
+    var mp_set = () => sp_set()._tilemap;
+    
+    var g_ev = evid => evid ? $gameMap.event(evid) : $gamePlayer;
+    
+    ui_label.prototype.bind_char = function(ch) {
+        this.bind(ch_set().find(sp => sp._character === ch));
+    };
+    
+    ui_label.prototype.bind_ev = function(evid) {
+        var ev = g_ev(evid);
+        if(!ev) return;
+        this.bind_char(ev);
+    };
+    
+    return {
+        'base': ui_label,
+    };
     
 })(Window_Base);
