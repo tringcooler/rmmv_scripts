@@ -63,7 +63,7 @@ var ui_label_map = (function(_super) {
     __extends(ui_label_map, _super);
     function ui_label_map(...args) {
         _super.call(this, ...args);
-        this.set_anchor([0, 0]);
+        this.set_anchors([0.5, 1], [0.5, 0]);
         this.set_map_pos([0, 0]);
     }
     
@@ -78,14 +78,19 @@ var ui_label_map = (function(_super) {
         }
     };
     
-    ui_label_map.prototype.set_anchor = function(anchor) {
-        this._anchor = anchor;
+    ui_label_map.prototype.set_anchors = function(s_anchor, d_anchor) {
+        if(s_anchor) {
+            this._s_anchor = s_anchor;
+        }
+        if(d_anchor) {
+            this._d_anchor = d_anchor;
+        }
     };
     
     ui_label_map.prototype.screen_pos = function(pos) {
         return [
-            (g_map().adjustX(pos[0]) + this._anchor[0]) * $gameMap.tileWidth(),
-            (g_map().adjustY(pos[1]) + this._anchor[1]) * $gameMap.tileHeight(),
+            (g_map().adjustX(pos[0]) + this._d_anchor[0]) * $gameMap.tileWidth() - this.width * this._s_anchor[0],
+            (g_map().adjustY(pos[1]) + this._d_anchor[1]) * $gameMap.tileHeight() - this.height * this._s_anchor[1],
         ];
     };
     
