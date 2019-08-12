@@ -58,33 +58,49 @@ var ui_label = (function(_super) {
     
 })(Window_Base);
 
-var ui_label_ev = (function(_super) {
+var ui_label_map = (function(_super) {
     
-    __extends(ui_label_ev, _super);
-    function ui_label_ev(...args) {
+    __extends(ui_label_map, _super);
+    function ui_label_map(...args) {
         _super.call(this, ...args);
+        this.set_anchor([0, 0]);
+        this.set_map_pos([0, 0]);
     }
     
-    var ch_set = () => SceneManager._scene._spriteset._characterSprites;
-    var g_ev = evid => evid ? $gameMap.event(evid) : $gamePlayer;
+    var cscene = () => (sc => (sc instanceof Scene_Map) ? sc : null)(SceneManager._scene);
+    var g_map = () => $gameMap;
     
-    ui_label_ev.prototype.bind_char = function(ch) {
-        this.bind(ch_set().find(sp => sp._character === ch));
-    };
-    
-    ui_label_ev.prototype.bind_ev = function(evid) {
-        this._bind_evid = evid;
-        var ev = g_ev(evid);
-        if(!ev) return;
-        this.bind_char(ev);
-    };
-    
-    ui_label_ev.prototype.on_recreate = function() {
-        if(this._bind_evid >= 0) {
-            this.bind_ev(this._bind_evid);
+    ui_label_map.prototype.bind = function() {
+        var sc = cscene();
+        if(sc) {
+            this.remove();
+            sc.addWindow(this);
         }
     };
     
-    return ui_label_ev;
+    ui_label_map.prototype.set_anchor = function(anchor) {
+        this._anchor = anchor;
+    };
+    
+    ui_label_map.prototype.screen_pos = function(pos) {
+        return [
+            (g_map().adjustX(pos[0]) + this._anchor[0]) * $gameMap.tileWidth(),
+            (g_map().adjustY(pos[1]) + this._anchor[1]) * $gameMap.tileHeight(),
+        ];
+    };
+    
+    ui_label_map.prototype.set_map_pos = function(pos) {
+        if(pos) {
+            this._map_pos = pos;
+        }
+        this.set_pos(this.screen_pos(this._map_pos));
+    };
+    
+    ui_label_map.prototype.refresh = function() {
+        this.set_map_pos();
+        __supermethod(_super, this, 'refresh')();
+    };
+    
+    return ui_label_map;
     
 })(ui_label);
