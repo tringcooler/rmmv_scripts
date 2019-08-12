@@ -33,30 +33,21 @@ var dynamic_events = (function() {
     };
     
     var remove_characters = function(ch_set) {
-        var rm = [];
-        var rm_sub = [];
         for (var sp of ch_set) {
-            if(!sp.isTile || !sp.isTile()) {
+            if(!sp.isTile()) {
                 if(sp.parent && sp.parent.removeChild(sp)) {
-                    var [sub_rm, sub_rm_sub] = remove_characters(sp.children);
-                    sp.on_remove && sp.on_remove();
-                    rm.push(sp);
-                    rm_sub = rm_sub.concat(sub_rm).concat(sub_rm_sub);
+                    remove_characters(sp.children);
                 }
             }
         }
-        return [rm, rm_sub];
     };
     
     var reset_charas = function() {
         var sc = cscene();
         if(sc instanceof Scene_Map) {
             //sc._spriteset.hideCharacters();
-            var [rm, rm_sub] = remove_characters(sc._spriteset._characterSprites);
+            remove_characters(sc._spriteset._characterSprites);
             sc._spriteset.createCharacters();
-            for(var sp of rm_sub) {
-                sp.on_recreate && sp.on_recreate();
-            }
         }
     };
     
