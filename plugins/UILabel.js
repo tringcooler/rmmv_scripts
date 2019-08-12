@@ -186,64 +186,113 @@ var ui_label = (function() {
             this._labels_pool[key] = lb;
         };
         
-        label_rebinder.prototype._new_ev = function(evid, init_text = null) {
+        var label_setting = function(lb, setting) {
+            if(!setting) return;
+            for(var k in setting) {
+                var fname = 'set_' + k;
+                if(!lb[fname]) {
+                    fname = k;
+                    if(!lb[fname]) continue;
+                }
+                lb[fname](...setting[k]);
+            }
+        };
+        
+        label_rebinder.prototype._hndl_ev = function(evid, linfo = null) {
             var epool = this._dyn_evs.epool(evid);
             if(!epool) return;
             var src_text = epool['@ui_label'];
-            if(init_text) {
-                epool['@ui_label'] = init_text;
+            var _new_lb = true;
+            if(linfo) {
+                epool['@ui_label'] = linfo.text;
+                epool['@ui_label_set'] = linfo.set;
                 if(src_text) {
-                    return;
+                    _new_lb = false;
                 }
             } else if(!src_text) {
                 return;
             }
-            var lb = new ui_label_ev(() => epool['@ui_label']);
-            lb.bind(evid);
-            this._set_lpool('ev_' + evid, lb);
+            var lb;
+            var key = 'ev_' + evid;
+            if(_new_lb){
+                lb = new ui_label_ev(() => epool['@ui_label']);
+            } else {
+                lb = this._labels_pool[key];
+            }
+            label_setting(lb, epool['@ui_label_set']);
+            if(_new_lb) {
+                lb.bind(evid);
+                this._set_lpool(key, lb);
+            }
+        };
+        
+        label_rebinder.prototype._cln_ev = function(evid) {
+            var epool = this._dyn_evs.epool(evid);
+            if(epool) {
+                delete epool['@ui_label'];
+                delete epool['@ui_label_set'];
+            }
         };
         
         label_rebinder.prototype._rebind_ev = function() {
             for(var evid = 1; evid < g_map()._events.length; evid ++) {
-                this._new_ev(evid);
+                this._hndl_ev(evid);
             }
         };
         
         label_rebinder.prototype.bind_ev = function() {
             for(var evid = 1; evid < g_map()._events.length; evid ++) {
                 if(!this._labels_pool['ev_' + evid]) {
-                    this._new_ev(evid);
+                    this._hndl_ev(evid);
                 }
             }
         };
         
-        label_rebinder.prototype._new_ui = function(linfo, key) {
-            var lb;
-            if(linfo.type == 'map') {
-                lb = new ui_label_map(() => linfo.text);
-            } else {
-                lb = new ui_label_base(() => linfo.text);
+        label_rebinder.prototype._hndl_nm = function(key, labels_info, linfo = null) {
+            if(!labels_info) return;
+            var src_linfo = (labels_info && labels_info[key]);
+            var _new_lb = true;
+            if(linfo) {
+                if(src_linfo) {
+                    if(src_linfo.type != linfo.type) return null;
+                    Object.assign(src_linfo, linfo);
+                    _new_lb = false;
+                } else {
+                    labels_info[key] = linfo;
+                    src_linfo = linfo;
+                }
+            } else if(!src_linfo) {
+                return;
             }
-            lb.set_pos(linfo.pos);
-            lb.bind();
-            this._set_lpool(key, lb);
-        };
-        
-        label_rebinder.prototype._new_pl = function(linfo, key) {
-            var lb = new ui_label_ev(() => linfo.text);
-            lb.bind(0);
-            this._set_lpool(key, lb);
+            var lb;
+            if(_new_lb) {
+                var _txt = () => src_linfo.text
+                if(src_linfo.type == 'player') {
+                    lb = new ui_label_ev(_txt);
+                } else if(src_linfo.type == 'map') {
+                    lb = new ui_label_map(_txt);
+                } else {
+                    lb = new ui_label_base(_txt);
+                }
+            } else {
+                lb = this._labels_pool[key];
+            }
+            label_setting(lb, src_linfo.set);
+            if(_new_lb) {
+                if(src_linfo.type == 'player') {
+                    lb.bind(0);
+                } else {
+                    lb.bind();
+                }
+                this._set_lpool(key, lb);
+            }
         };
         
         label_rebinder.prototype._rebind_ui = function(mid) {
             var labels_info = this._store.get(mid, 'labels_info');
-            for(var lkey in labels_info) {
-                var linfo = labels_info[lkey];
-                if(linfo.type == 'player') {
-                    this._new_pl(linfo, lkey);
-                } else {
-                    this._new_ui(linfo, lkey);
-                }
+            if(!labels_info) return;
+            for(var key in labels_info) {
+                this._hndl_nm(key, labels_info);
             }
         };
         
@@ -252,34 +301,29 @@ var ui_label = (function() {
             this._rebind_ui(mid);
         };
         
-        label_rebinder.prototype.label = function(key, text, type, ...args) {
+        label_rebinder.prototype.label_ex = function(key, text, type, setting) {
             var linfo = {
                 text: text,
                 type: type,
+                set: setting,
             };
             if(type == 'event') {
                 var evid = key;
-                var epool = this._new_ev(evid, text);
-                return;
-            }
-            var mid = this._store.mapid();
-            var src_linfo = this._store.get(mid, 'labels_info', key);
-            if(src_linfo) {
-                if(src_linfo.type != type) return null;
-                src_linfo.text = text;
-                if(type != 'player') {
-                    src_linfo.pos = args[0];
-                    this._labels_pool[key].set_pos(args[0]);
-                }
+                this._hndl_ev(evid, linfo);
             } else {
-                if(type == 'player') {
-                    this._new_pl(linfo, key);
-                } else {
-                    linfo.pos = args[0];
-                    this._new_ui(linfo, key);
+                var mid = this._store.mapid();
+                var labels_info = this._store.get(mid, 'labels_info');
+                if(!labels_info) {
+                    labels_info = {};
+                    this._store.set(mid, 'labels_info', labels_info);
                 }
-                this._store.set(mid, 'labels_info', key, linfo);
+                this._hndl_nm(key, labels_info, linfo);
             }
+        };
+        
+        label_rebinder.prototype.label = function(key, text, type, pos = null) {
+            var setting = pos ? {pos: [pos]} : null;
+            this.label_ex(key, text, type, setting);
         };
         
         label_rebinder.prototype.remove = function(key) {
@@ -288,8 +332,14 @@ var ui_label = (function() {
                 delete this._labels_pool[key];
             }
             var labels_info = this._store.get(this._store.mapid(), 'labels_info');
-            if(labels_info[key]) {
+            if(labels_info && labels_info[key]) {
                 delete labels_info[key];
+            }
+            if(key.slice(0, 3) == 'ev_') {
+                var evid = parseInt(key.slice(3));
+                if(!isNaN(evid)) {
+                    this._cln_ev(evid);
+                }
             }
         };
         
