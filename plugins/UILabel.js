@@ -17,22 +17,34 @@ var ui_label = (function(_super) {
     __extends(ui_label, _super);
     function ui_label(text, pos) {
         _super.call(this, 0, 0, 0, 0);
+        this.set_anchor([0, 0]);
         this.set_text(text);
+        this.set_pos([0, 0]);
     }
+    
+    ui_label.prototype.set_anchor = function(anchor) {
+        if(anchor) {
+            this._anchor = anchor;
+        }
+    };
     
     ui_label.prototype.set_text = function(text) {
         if(!text) return;
         var padding = this.standardPadding() * 2;
         this.width = this.textWidth(text.split('\n')[0]) + padding;
         this.height = this.calcTextHeight({text: text}, true) + padding;
+        this.set_pos();
         this._label_text = text;
         this.createContents();
     };
     
     ui_label.prototype.set_pos = function(pos) {
-        if(!pos) return;
-        this.x = pos[0] || 0;
-        this.y = pos[1] || 0;
+        if(pos) {
+            this._rawx = (pos[0] || 0);
+            this._rawy = (pos[1] || 0);
+        }
+        this.x = this._rawx - this.width * this._anchor[0];
+        this.y = this._rawy - this.height * this._anchor[1];
     };
     
     ui_label.prototype.update = function() {
@@ -79,9 +91,7 @@ var ui_label_map = (function(_super) {
     };
     
     ui_label_map.prototype.set_anchors = function(s_anchor, d_anchor) {
-        if(s_anchor) {
-            this._s_anchor = s_anchor;
-        }
+        this.set_anchor(s_anchor);
         if(d_anchor) {
             this._d_anchor = d_anchor;
         }
@@ -89,8 +99,8 @@ var ui_label_map = (function(_super) {
     
     ui_label_map.prototype.screen_pos = function(pos) {
         return [
-            (g_map().adjustX(pos[0]) + this._d_anchor[0]) * $gameMap.tileWidth() - this.width * this._s_anchor[0],
-            (g_map().adjustY(pos[1]) + this._d_anchor[1]) * $gameMap.tileHeight() - this.height * this._s_anchor[1],
+            (g_map().adjustX(pos[0]) + this._d_anchor[0]) * $gameMap.tileWidth(),
+            (g_map().adjustY(pos[1]) + this._d_anchor[1]) * $gameMap.tileHeight(),
         ];
     };
     
