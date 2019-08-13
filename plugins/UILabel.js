@@ -210,8 +210,12 @@ var ui_label = (function() {
             var src_text = epool['@ui_label'];
             var _new_lb = true;
             if(linfo) {
-                epool['@ui_label'] = linfo.text;
-                epool['@ui_label_set'] = linfo.set;
+                if(linfo.text !== undefined) {
+                    epool['@ui_label'] = linfo.text;
+                }
+                if(linfo.set !== undefined) {
+                    epool['@ui_label_set'] = linfo.set;
+                }
                 if(src_text) {
                     _new_lb = false;
                 }
@@ -309,10 +313,10 @@ var ui_label = (function() {
         
         label_rebinder.prototype.label_ex = function(key, text, type, setting) {
             var linfo = {
-                text: text,
                 type: type,
-                set: setting,
             };
+            if(text) linfo.text = text;
+            if(setting) linfo.set = setting;
             if(type == 'event') {
                 var evid = (typeof key == 'number') ? key : k2evid(key);
                 if(evid === null) return;
@@ -351,12 +355,27 @@ var ui_label = (function() {
         label_rebinder.prototype._hook_plugin = function() {
             plugin_util.hook((command, args, interp) => {
                 if(command == 'ui_label') {
+                    var _ekey = k => (k == 'this') ? interp._eventId : k;
+                    var _opta = d => (args[0] == d) ? args.shift() : null;
                     var type = plugin_util.gval(args.shift());
-                    if(type == 'event') {
-                    } else if(type == 'player') {
-                    } else if(type == 'map') {
-                    } else {
+                    var key = _ekey(plugin_util.gval(args.shift()));
+                    if(type == 'clean') {
+                        this.remove(key);
+                        return;
                     }
+                    var scmd = (_opta('show') || _opta('hide'));
+                    var text = plugin_util.gval(args.shift());
+                    var pos = plugin_util.gval(args.shift());
+                    var setting = {};
+                    if(scmd == 'show') {
+                        setting.show = [];
+                    } else if(scmd == 'hide') {
+                        setting.hide = [];
+                    }
+                    if(pos) {
+                        setting.pos = [pos];
+                    }
+                    this.label_ex(key, text, type, setting);
                 }
             });
         };
