@@ -160,8 +160,14 @@ var dynamic_events = (function() {
                 var id = plugin_util.gval(args.shift());
                 var x = plugin_util.gval(args.shift());
                 var y = plugin_util.gval(args.shift());
-                this.clone_event(id, x, y);
+                var nid = this.clone_event(id, x, y);
                 this.refresh_events();
+                var ssw = plugin_util.gval(args.shift());
+                if(ssw) {
+                    for(var s of ssw) {
+                        plugin_util.evsw(nid, s, true);
+                    }
+                }
             } else if(command == 'this_pool') {
                 var epool = this.this_epool(interp);
                 if(!epool) return;
