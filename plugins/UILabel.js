@@ -363,6 +363,9 @@ var ui_label = (function() {
                     if(type == 'clean') {
                         this.remove(key);
                         return;
+                    } else if(type == 'bind') {
+                        this.bind_ev();
+                        return;
                     }
                     var scmd = (_opta('show') || _opta('hide'));
                     var text = plugin_util.gval(args.shift());
