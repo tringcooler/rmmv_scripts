@@ -175,7 +175,6 @@ var ui_label = (function() {
         function label_rebinder(dyn_evs) {
             this._store = new store_pool('ui_label');
             this._dyn_evs = dyn_evs;
-            this._labels_pool = {};
             this._hook_plugin();
             this._store.load2.on(this.rebind.bind(this));
         }
@@ -309,6 +308,7 @@ var ui_label = (function() {
         };
         
         label_rebinder.prototype.rebind = function(mid) {
+            this._labels_pool = {};
             this._rebind_ev();
             this._rebind_ui(mid);
         };
