@@ -62,14 +62,12 @@ var tile_board = (function() {
     };
     
     var event_label_text = function(area, events) {
+        var lbtag = '@ui_label';
         var [src_evid, ssw_id, init_pool] = get_event_info(area, events);
-        if(!init_pool || !init_pool.label) return null;
-        var text = init_pool.label;
-        if(text.slice(0, 3) == 'ev:') {
-            var p = init_pool;
-            text = eval(text.slice(3));
-        }
-        return text;
+        if(!init_pool || !init_pool[lbtag]) return null;
+        var evs = pool_util.evstr([lbtag], init_pool);
+        if(!evs) return null;
+        return evs();
     };
     
     map_builder.prototype._new_event = function(pos, area, events) {
@@ -115,6 +113,7 @@ var tile_board = (function() {
             }
         });
         this._decorate(rng);
+        this._ui_lab.bind_ev();
     };
     
     map_builder.prototype._prv_evlabel = function(pos, area, events, clean) {
@@ -276,7 +275,7 @@ var g_t_board = new tile_board({
             var ev_p = v => ({
                 mhp: v,
                 hp: v,
-                label: "ev:p.hp + '/' + p.mhp",
+                '@ui_label': "@ev:$.hp + '/' + $.mhp",
             });
             return {
                 0x11: [5, 'c', ev_p(1)],

@@ -225,7 +225,9 @@ var ui_label = (function() {
             var lb;
             var key = evid2k(evid);
             if(_new_lb){
-                lb = new ui_label_ev(() => epool['@ui_label']);
+                var evs = pool_util.evstr(['@ui_label'], epool);
+                if(!evs) return;
+                lb = new ui_label_ev(evs);
             } else {
                 lb = this._labels_pool[key];
             }

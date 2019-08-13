@@ -15,8 +15,10 @@ var __supermethod = this.__supermethod || function (_spr, _slf, mth) {
 var pool_util = (function() {
     
     var _get = function(idxs, pool) {
-        if(idxs.length == 0 || !pool) {
+        if(!pool) {
             return undefined;
+        } else if(idxs.length == 0) {
+            return pool;
         } else if(idxs.length == 1) {
             return pool[idxs[0]];
         } else {
@@ -55,10 +57,26 @@ var pool_util = (function() {
         }
     };
     
+    var _evstr = function(idxs, pool) {
+        if(idxs.length == 0) return;
+        var key = idxs[idxs.length - 1];
+        var evpool = _get(idxs.slice(0, -1), pool);
+        var text = evpool[key];
+        if(!text || !(typeof text == 'string')) return;
+        if(text.slice(0, 4) == '@ev:') {
+            text = text.slice(4);
+            var $ = evpool;
+            return () => eval(text);
+        } else {
+            return () => evpool[key];
+        }
+    };
+    
     return {
         'get': _get,
         'set': _set,
         'each': _each,
+        'evstr' : _evstr,
     };
     
 })();
