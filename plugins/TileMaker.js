@@ -762,6 +762,10 @@ var tile_maker = (function() {
             return rtile;
         };
         
+        tile_deck.prototype.tiles_num = function() {
+            return this._tpool.length;
+        };
+        
         return tile_deck;
         
     })();

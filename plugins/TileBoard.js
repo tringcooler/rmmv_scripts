@@ -128,9 +128,18 @@ var tile_board = (function() {
         return key;
     };
     
+    var secret_area = function(area, events) {
+        var lb_text = event_label_text(area, events);
+        if(typeof lb_text != 'string') return [false, area];
+        var [sec_tag, sec_area] = lb_text.split(':');
+        if(sec_tag != '@secret' || TYPA[sec_area] === undefined) return [false, area];
+        return [true, TYPA[sec_area]];
+    };
+    
     map_builder.prototype.preview = function(prv_pool, clean = false) {
         var valid = true;
         prv_pool.each((tx, ty, area) => {
+            var [sec, area] = secret_area(area, this._minfo.events);
             var tinfo = get_tiles_info(area, this._minfo.prvset);
             for(var tlayer = 0; tlayer < tinfo.length; tlayer ++) {
                 var tval = tinfo[tlayer];
@@ -141,7 +150,9 @@ var tile_board = (function() {
                     }
                 }
             }
-            this._prv_evlabel([tx, ty], area, this._minfo.events, clean);
+            if(!sec) {
+                this._prv_evlabel([tx, ty], area, this._minfo.events, clean);
+            }
         });
         this._map_strr.refresh_map();
         return valid;
@@ -179,7 +190,7 @@ var tile_board = (function() {
             this._deck.restore(deck_pool);
             this._deck.set_units(this._binfo.deck.units);
             if(this._deck.make_tiles() === null) this._panic();
-            if(this._deck.fill_events(this._binfo.deck.events) === null) this._panic();
+            if(this._deck.fill_events(this._binfo.deck.events, this._binfo.deck.events_extra) === null) this._panic();
             this._store.set('deck_pool', deck_pool);
             this._store.set('mapid', mapid);
         }
@@ -240,6 +251,8 @@ var tile_board = (function() {
                 } else if(cmd == 'brk') {
                     var pos = [0, 0].map(ga);
                     this.break_wall(pos);
+                } else if(cmd == 'num') {
+                    plugin_util.sval(plugin_util.gval(args.shift()), this._deck.tiles_num());
                 }
             }
         });
@@ -256,6 +269,11 @@ var g_t_board = new tile_board({
         events: {
             0x10:5, 0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
         },
+        events_extra: [{
+            _start: 26, 0x16: 2, 0x17: 1,
+        }, {
+            _start: 0, 0x18: 1,
+        }],
     },
     map: {
         tileset: [
@@ -287,6 +305,9 @@ var g_t_board = new tile_board({
                 0x13: [5, 'd', ev_p(3)],
                 0x14: [5, 'd', ev_p(4)],
                 0x15: [5, 'd', ev_p(5)],
+                0x16: [5, 'd', ev_p(6)],
+                0x17: [5, 'd', ev_p(7)],
+                0x18: [5, 'd', ev_p(8)],
             };
         })(),
     },
