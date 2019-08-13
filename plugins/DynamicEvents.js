@@ -173,6 +173,14 @@ var dynamic_events = (function() {
                 if(!epool) return;
                 var scmd = args.shift();
                 var sargs = args.map(v => plugin_util.gval(v));
+                if(scmd == 'evset') {
+                    if(sargs.length < 2) return;
+                    var path = sargs.shift().split('/');
+                    var evs = pool_util.evstr([0], sargs);
+                    if(!evs) return;
+                    pool_util.set(path, epool, evs());
+                    return;
+                }
                 var sdst = sargs.pop();
                 if(scmd == 'get') {
                     plugin_util.sval(sdst, pool_util.get(sargs, epool));

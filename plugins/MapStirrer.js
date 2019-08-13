@@ -62,8 +62,8 @@ var pool_util = (function() {
         var key = idxs[idxs.length - 1];
         var evpool = _get(idxs.slice(0, -1), pool);
         var text = evpool[key];
-        if(!text || !(typeof text == 'string')) return;
-        if(text.slice(0, 4) == '@ev:') {
+        if(!text) return;
+        if(typeof text == 'string' && text.slice(0, 4) == '@ev:') {
             text = text.slice(4);
             var $ = evpool;
             return () => eval(text);

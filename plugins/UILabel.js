@@ -375,7 +375,7 @@ var ui_label = (function() {
                     } else if(scmd == 'hide') {
                         setting.hide = [];
                     }
-                    if(text[0] == '*') {
+                    if(text && text[0] == '*') {
                         text = pool_util.get(text.slice(1).split('/'), this._dyn_evs.this_epool(interp));
                     }
                     if((pos_x || pos_x == 0) && (pos_y || pos_y == 0)) {
