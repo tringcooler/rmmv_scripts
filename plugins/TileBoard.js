@@ -264,7 +264,7 @@ var tile_board = (function() {
 
 var g_t_board = new tile_board({
     deck: {
-        seed: 123,
+        seed: null,//123,
         units: [30, 15, 10, 5],
         events: {
             0x10:5, 0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
