@@ -270,7 +270,9 @@ var g_t_board = new tile_board({
             0x10:5, 0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
         },
         events_extra: [{
-            _start: 26, 0x16: 2, 0x17: 1,
+            _start: 37, 0x21: 1,
+        }, {
+            _start: 18, 0x22: 1,
         }, {
             _start: 0, 0x18: 1,
         }],
@@ -309,6 +311,9 @@ var g_t_board = new tile_board({
                 0x16: [5, 'd', ev_p(6)],
                 0x17: [5, 'd', ev_p(7)],
                 0x18: [6, 'a', a(ev_p(8), {prv_label: '???'})],
+                
+                0x21: [9, 'a', {'prv_label': '???'}],
+                0x22: [10, 'a', {'prv_label': '???'}],
             };
         })(),
     },

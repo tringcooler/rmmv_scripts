@@ -702,7 +702,7 @@ var tile_maker = (function() {
         
         tile_deck.prototype._extra_check = function(extra) {
             if(!extra || extra.length <= 0) return;
-            var start_num = (extra[0]['_start'] || Infinity);
+            var start_num = (sn => (sn === undefined) ? Infinity : sn)(extra[0]['_start']);
             if(this._event_num() > start_num) return;
             var en = extra.shift();
             for(var k in en) {
