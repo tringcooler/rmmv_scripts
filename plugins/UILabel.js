@@ -176,6 +176,7 @@ var ui_label = (function() {
             this._store = new store_pool('ui_label');
             this._dyn_evs = dyn_evs;
             this._labels_pool = {};
+            this._hook_plugin();
             this._store.load2.on(this.rebind.bind(this));
         }
         
@@ -200,6 +201,9 @@ var ui_label = (function() {
             }
         };
         
+        var evid2k = evid => 'ev_' + evid;
+        var k2evid = k => ((pr, e) => (pr == 'ev') ? (evid => isNaN(evid) ? null : evid)(parseInt(e)) : null)(...k.split('_'));
+        
         label_rebinder.prototype._hndl_ev = function(evid, linfo = null) {
             var epool = this._dyn_evs.epool(evid);
             if(!epool) return;
@@ -215,7 +219,7 @@ var ui_label = (function() {
                 return;
             }
             var lb;
-            var key = 'ev_' + evid;
+            var key = evid2k(evid);
             if(_new_lb){
                 lb = new ui_label_ev(() => epool['@ui_label']);
             } else {
@@ -244,7 +248,7 @@ var ui_label = (function() {
         
         label_rebinder.prototype.bind_ev = function() {
             for(var evid = 1; evid < g_map()._events.length; evid ++) {
-                if(!this._labels_pool['ev_' + evid]) {
+                if(!this._labels_pool[evid2k(evid)]) {
                     this._hndl_ev(evid);
                 }
             }
@@ -310,7 +314,8 @@ var ui_label = (function() {
                 set: setting,
             };
             if(type == 'event') {
-                var evid = key;
+                var evid = (typeof key == 'number') ? key : k2evid(key);
+                if(evid === null) return;
                 this._hndl_ev(evid, linfo);
             } else {
                 var mid = this._store.mapid();
@@ -337,12 +342,23 @@ var ui_label = (function() {
             if(labels_info && labels_info[key]) {
                 delete labels_info[key];
             }
-            if(key.slice(0, 3) == 'ev_') {
-                var evid = parseInt(key.slice(3));
-                if(!isNaN(evid)) {
-                    this._cln_ev(evid);
-                }
+            var evid = k2evid(key);
+            if(evid !== null) {
+                this._cln_ev(evid);
             }
+        };
+        
+        label_rebinder.prototype._hook_plugin = function() {
+            plugin_util.hook((command, args, interp) => {
+                if(command == 'ui_label') {
+                    var type = plugin_util.gval(args.shift());
+                    if(type == 'event') {
+                    } else if(type == 'player') {
+                    } else if(type == 'map') {
+                    } else {
+                    }
+                }
+            });
         };
         
         return label_rebinder;
