@@ -298,6 +298,7 @@ var g_t_board = new tile_board({
                 prv_label: "@ev:'mon:' + $.mhp",
                 '@ui_label': "@ev:$.hp + '/' + $.mhp",
             });
+            var a = (s, d) => Object.assign({}, s, d);
             return {
                 0x10: [5, 'c', {'prv_label': 'atk'}],
                 0x11: [5, 'd', ev_p(1)],
@@ -307,7 +308,7 @@ var g_t_board = new tile_board({
                 0x15: [5, 'd', ev_p(5)],
                 0x16: [5, 'd', ev_p(6)],
                 0x17: [5, 'd', ev_p(7)],
-                0x18: [5, 'd', ev_p(8)],
+                0x18: [6, 'a', a(ev_p(8), {prv_label: '???'})],
             };
         })(),
     },
