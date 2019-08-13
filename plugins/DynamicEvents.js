@@ -24,7 +24,7 @@ var dynamic_events = (function() {
     };
     
     var setup_event = function(de_idx) {
-        if(de_idx >= d_ev().length || de_idx < g_ev().length) return;
+        if(de_idx >= d_ev().length || de_idx < g_ev().length || !d_ev()[de_idx]) return;
         g_ev()[de_idx] = new Game_Event(mapid(), de_idx);
     };
     
