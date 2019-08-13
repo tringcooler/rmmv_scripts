@@ -357,10 +357,9 @@ var ui_label = (function() {
         label_rebinder.prototype._hook_plugin = function() {
             plugin_util.hook((command, args, interp) => {
                 if(command == 'ui_label') {
-                    var _ekey = k => (k == 'this') ? interp._eventId : k;
                     var _opta = d => (args[0] == d) ? args.shift() : null;
                     var type = plugin_util.gval(args.shift());
-                    var key = _ekey(plugin_util.gval(args.shift()));
+                    var key = this._dyn_evs.ex_evid(interp, plugin_util.gval(args.shift()));
                     if(type == 'clean') {
                         this.remove(key);
                         return;

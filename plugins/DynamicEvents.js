@@ -137,9 +137,25 @@ var dynamic_events = (function() {
         return this.epool(interp._eventId);
     };
     
+    dynamic_events.prototype.ex_evid = function(interp, evid) {
+        if(evid == 'this') {
+            return interp._eventId;
+        } else if(evid == 'that') {
+            return this.epool(interp._eventId)['__caller__'] || undefined;
+        } else {
+            return evid;
+        }
+    };
+    
+    dynamic_events.prototype.that_epool = function(interp) {
+        var evid = this.ex_evid(interp, 'that');
+        return evid ? this.epool(evid) : undefined;
+    };
+    
     dynamic_events.prototype.emit_ev = function(interp, ge_id) {
         var tar_ev = g_ev()[ge_id];
         if(!tar_ev) return;
+        this.epool(tar_ev)['__caller__'] = interp._eventId;
         tar_ev.refresh();
         if(!tar_ev.page()) return;
         interp.setupChild(tar_ev.list(), ge_id);
@@ -168,8 +184,13 @@ var dynamic_events = (function() {
                         plugin_util.evsw(nid, s, true);
                     }
                 }
-            } else if(command == 'this_pool') {
-                var epool = this.this_epool(interp);
+            } else if(command == 'this_pool' || command == 'that_pool') {
+                var epool;
+                if(command == 'this_pool') {
+                    epool = this.this_epool(interp);
+                } else if(command == 'that_pool') {
+                    epool = this.that_epool(interp);
+                }
                 if(!epool) return;
                 var scmd = args.shift();
                 var sargs = args.map(v => plugin_util.gval(v));
@@ -187,6 +208,16 @@ var dynamic_events = (function() {
                 } else if(scmd == 'set') {
                     if(sargs.length <= 0) return;
                     pool_util.set(sargs, epool, sdst);
+                }
+            } else if(command == 'that_ssw') {
+                var eid = this.ex_evid(interp, 'that');
+                if(!eid) return;
+                var ssw = plugin_util.gval(args.shift());
+                var off = plugin_util.gval(args.shift());
+                if(ssw) {
+                    for(var s of ssw) {
+                        plugin_util.evsw(eid, s, !off);
+                    }
                 }
             } else if(command == 'emit_ev') {
                 var eid = plugin_util.gval(args.shift());
