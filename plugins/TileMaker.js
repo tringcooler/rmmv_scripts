@@ -33,7 +33,7 @@ var tile_maker = (function() {
         cent: 0x80,
         warn: 0x8000,
         msk_land: 0x07,
-        msk_pass: 0x88,
+        msk_pass: 0x7f88,
     };
     
     var prv_a = a => ((a & TYPA_P.msk_land) ? TYPA_P.land : 0) | (a & TYPA_P.msk_pass);

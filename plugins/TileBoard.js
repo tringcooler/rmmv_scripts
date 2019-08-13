@@ -16,9 +16,10 @@ var tile_board = (function() {
     
     var AREA_LAYER = 5;
     
-    function map_builder(map_info, map_strr, dyn_evs) {
+    function map_builder(map_info, map_strr, dyn_evs, ui_lab) {
         this._map_strr = map_strr;
         this._dyn_evs = dyn_evs;
+        this._ui_lab = ui_lab;
         this._minfo = map_info;
         this._init_decorator();
     }
@@ -58,6 +59,17 @@ var tile_board = (function() {
         var ev_info = events[a2e(area)];
         if(!ev_info) return [null];
         return ev_info;
+    };
+    
+    var event_label_text = function(area, events) {
+        var [src_evid, ssw_id, init_pool] = get_event_info(area, events);
+        if(!init_pool || !init_pool.label) return null;
+        var text = init_pool.label;
+        if(text.slice(0, 3) == 'ev:') {
+            var p = init_pool;
+            text = eval(text.slice(3));
+        }
+        return text;
     };
     
     map_builder.prototype._new_event = function(pos, area, events) {
@@ -105,6 +117,18 @@ var tile_board = (function() {
         this._decorate(rng);
     };
     
+    map_builder.prototype._prv_evlabel = function(pos, area, events, clean) {
+        var text = event_label_text(area, events);
+        if(text === null) return null;
+        var key = 'prv:' + pos.join(',');
+        if(clean) {
+            this._ui_lab.remove(key);
+        } else {
+            this._ui_lab.label_ex(key, text, 'map', {pos: [pos], anchors: [[0.5, 0.5], [0.5, 0.5]]});
+        }
+        return key;
+    };
+    
     map_builder.prototype.preview = function(prv_pool, clean = false) {
         var valid = true;
         prv_pool.each((tx, ty, area) => {
@@ -118,6 +142,7 @@ var tile_board = (function() {
                     }
                 }
             }
+            this._prv_evlabel([tx, ty], area, this._minfo.events, clean);
         });
         this._map_strr.refresh_map();
         return valid;
@@ -132,11 +157,11 @@ var tile_board = (function() {
     var tile_map = tile_maker.map;
     var tile_deck = tile_maker.deck;
     
-    function tile_board(board_info, map_strr, dyn_evs) {
+    function tile_board(board_info, map_strr, dyn_evs, ui_lab) {
         this._store = new store_pool('tile_board');
         this._map = new tile_map([map_strr, map_pool_util]);
         this._binfo = board_info;
-        this._builder = new map_builder(this._binfo.map, map_strr, dyn_evs);
+        this._builder = new map_builder(this._binfo.map, map_strr, dyn_evs, ui_lab);
         this._hook_plugin();
         this._store.load.on(this.init_deck.bind(this));
     }
@@ -247,12 +272,19 @@ var g_t_board = new tile_board({
             ['warn', 50, 3],
         ],
         prvwarn: 50,
-        events: {
-            0x11: [5, 'c', {mhp: 1}],
-            0x12: [5, 'c', {mhp: 2}],
-            0x13: [5, 'c', {mhp: 3}],
-            0x14: [5, 'c', {mhp: 4}],
-            0x15: [5, 'c', {mhp: 5}],
-        },
+        events: (function() {
+            var ev_p = v => ({
+                mhp: v,
+                hp: v,
+                label: "ev:p.hp + '/' + p.mhp",
+            });
+            return {
+                0x11: [5, 'c', ev_p(1)],
+                0x12: [5, 'c', ev_p(2)],
+                0x13: [5, 'c', ev_p(3)],
+                0x14: [5, 'c', ev_p(4)],
+                0x15: [5, 'c', ev_p(5)],
+            };
+        })(),
     },
-}, g_map_s, g_d_ev);
+}, g_map_s, g_d_ev, g_ui_label);
