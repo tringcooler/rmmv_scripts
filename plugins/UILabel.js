@@ -194,7 +194,9 @@ var ui_label = (function() {
                     fname = k;
                     if(!lb[fname]) continue;
                 }
-                lb[fname](...setting[k]);
+                if(lb[fname] instanceof Function) {
+                    lb[fname](...setting[k]);
+                }
             }
         };
         
