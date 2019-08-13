@@ -62,7 +62,7 @@ var tile_board = (function() {
     };
     
     var event_label_text = function(area, events) {
-        var lbtag = '@ui_label';
+        var lbtag = 'prv_label';
         var [src_evid, ssw_id, init_pool] = get_event_info(area, events);
         if(!init_pool || !init_pool[lbtag]) return null;
         var evs = pool_util.evstr([lbtag], init_pool);
@@ -254,7 +254,7 @@ var g_t_board = new tile_board({
         seed: 123,
         units: [30, 15, 10, 5],
         events: {
-            0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
+            0x10:5, 0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
         },
     },
     map: {
@@ -277,9 +277,11 @@ var g_t_board = new tile_board({
             var ev_p = v => ({
                 mhp: v,
                 hp: v,
+                prv_label: "@ev:'mon:' + $.mhp",
                 '@ui_label': "@ev:$.hp + '/' + $.mhp",
             });
             return {
+                0x10: [5, 'c', {'prv_label': 'atk'}],
                 0x11: [5, 'd', ev_p(1)],
                 0x12: [5, 'd', ev_p(2)],
                 0x13: [5, 'd', ev_p(3)],
