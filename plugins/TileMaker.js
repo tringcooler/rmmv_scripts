@@ -690,14 +690,40 @@ var tile_maker = (function() {
             }
         };
         
-        tile_deck.prototype.fill_events = function(evnums) {
+        var extra_num = function(extra) {
+            return extra.reduce((r, en) => {
+                for(var k in en) {
+                    if(k[0] == '_') continue;
+                    r += en[k];
+                }
+                return r;
+            }, 0);
+        };
+        
+        tile_deck.prototype._extra_check = function(extra) {
+            if(!extra || extra.length <= 0) return;
+            var start_num = (extra[0]['_start'] || Infinity);
+            if(this._event_num() > start_num) return;
+            var en = extra.shift();
+            for(var k in en) {
+                if(k[0] == '_') continue;
+                this._epool[k] = (this._epool[k] || 0) + en[k];
+            }
+        };
+        
+        tile_deck.prototype.fill_events = function(evnums, extra = null) {
             this._epool = Object.assign({}, evnums);
             var empty_num = this._t_unit_num() - this._event_num();
+            if(extra) {
+                extra = extra.slice();
+                empty_num -= extra_num(extra);
+            }
             if(empty_num < 0) return null;
             Object.assign(this._epool, {0: empty_num});
             for(var tu_seq of this._tpool) {
                 for(var tu of tu_seq) {
                     var [pos, cw] = tu;
+                    this._extra_check(extra);
                     var ecode = this.rand_event();
                     if(ecode === null) return null;
                     if(!this.take_event(ecode)) return null;
