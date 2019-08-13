@@ -33,9 +33,9 @@ var ui_label = (function() {
                 if(otext && otext != text) {
                     this._fit_text(text);
                 }
-                return text;
+                return text.toString();
             } else {
-                return this._label_text;
+                return this._label_text.toString();
             }
         };
         
@@ -367,15 +367,19 @@ var ui_label = (function() {
                     }
                     var scmd = (_opta('show') || _opta('hide'));
                     var text = plugin_util.gval(args.shift());
-                    var pos = plugin_util.gval(args.shift());
+                    var pos_x = plugin_util.gval(args.shift());
+                    var pos_y = plugin_util.gval(args.shift());
                     var setting = {};
                     if(scmd == 'show') {
                         setting.show = [];
                     } else if(scmd == 'hide') {
                         setting.hide = [];
                     }
-                    if(pos) {
-                        setting.pos = [pos];
+                    if(text[0] == '*') {
+                        text = pool_util.get(text.slice(1).split('/'), this._dyn_evs.this_epool(interp));
+                    }
+                    if((pos_x || pos_x == 0) && (pos_y || pos_y == 0)) {
+                        setting.pos = [[pos_x, pos_y]];
                     }
                     this.label_ex(key, text, type, setting);
                 }
