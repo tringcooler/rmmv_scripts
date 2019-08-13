@@ -170,16 +170,16 @@ var tile_board = (function() {
     };
     
     tile_board.prototype.init_deck = function(mapid) {
-        this._deck = new tile_deck(this._binfo.seed);
+        this._deck = new tile_deck(this._binfo.deck.seed);
         var deck_pool = [];
         if(this._store.get('mapid') == mapid) {
             deck_pool = this._store.get('deck_pool');
             this._deck.restore(deck_pool);
         } else {
             this._deck.restore(deck_pool);
-            this._deck.set_units(this._binfo.units);
+            this._deck.set_units(this._binfo.deck.units);
             if(this._deck.make_tiles() === null) this._panic();
-            if(this._deck.fill_events(this._binfo.events) === null) this._panic();
+            if(this._deck.fill_events(this._binfo.deck.events) === null) this._panic();
             this._store.set('deck_pool', deck_pool);
             this._store.set('mapid', mapid);
         }
@@ -250,10 +250,12 @@ var tile_board = (function() {
 })();
 
 var g_t_board = new tile_board({
-    seed: 123,
-    units: [30, 15, 10, 5],
-    events: {
-        0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
+    deck: {
+        seed: 123,
+        units: [30, 15, 10, 5],
+        events: {
+            0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
+        },
     },
     map: {
         tileset: [
