@@ -507,7 +507,7 @@ var tile_maker = (function() {
         var _turn_pos = (dir, pos) => [...Array(dir)].reduce(r => (pos => [pos[1], -pos[0]])(r), pos);
         var _cent_rng = seq_len => (neg => [-neg, seq_len - neg])(Math.floor((seq_len - 1) / 2));
         var tseq2pos = function(tseq) {
-            var tdir = tseq.shift();
+            var tdir = tseq.shift()[0];
             var pos_seq = [];
             var [ys, ye] = _cent_rng(tseq.length);
             for(var y = ys; y < ye; y++) {
