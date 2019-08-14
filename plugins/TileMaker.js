@@ -630,6 +630,10 @@ var tile_maker = (function() {
             var ti = new tile_inner();
             for(var pos of pos_seq) {
                 var uidx = this.rand_unit();
+                if(uidx === null) {
+                    this.put_unit([0, 0]);
+                    uidx = this.rand_unit();
+                }
                 if(!this._set_tile_unit_to_tile(pos, uidx, tu_seq, ti)) {
                     this._cancel_tile(tu_seq);
                     if(retry < MT_MAX_RETRY) {

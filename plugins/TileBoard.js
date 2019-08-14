@@ -264,7 +264,7 @@ var tile_board = (function() {
 
 var g_t_board = new tile_board({
     deck: {
-        seed: null,//123,
+        seed: 1565774159218,//null,//123,
         units: [30, 15, 10, 5],
         events: {
             0x10:5, 0x11: 5, 0x12:10, 0x13:5, 0x14:2, 0x15:1,
@@ -297,6 +297,7 @@ var g_t_board = new tile_board({
             var ev_p = v => ({
                 mhp: v,
                 hp: v,
+                exp: v,
                 prv_label: "@ev:'mon:' + $.mhp",
                 '@ui_label': "@ev:$.hp + '/' + $.mhp",
             });
