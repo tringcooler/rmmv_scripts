@@ -715,19 +715,16 @@ var tile_maker = (function() {
             }
         };
         
-        tile_deck.prototype.fill_events = function(evnums, extra = null) {
-            this._epool = Object.assign({}, evnums);
-            var empty_num = this._t_unit_num() - this._event_num();
-            if(extra) {
-                extra = extra.slice();
-                empty_num -= extra_num(extra);
-            }
+        tile_deck.prototype.fill_events = function(evnums_extra) {
+            var empty_num = this._t_unit_num() - extra_num(evnums_extra);
             if(empty_num < 0) return null;
-            Object.assign(this._epool, {0: empty_num});
+            this._epool = {0: empty_num};
+            evnums_extra = evnums_extra.slice();
+            this._extra_check(evnums_extra);
             for(var tu_seq of this._tpool) {
                 for(var tu of tu_seq) {
                     var [pos, cw] = tu;
-                    this._extra_check(extra);
+                    this._extra_check(evnums_extra);
                     var ecode = this.rand_event();
                     if(ecode === null) return null;
                     if(!this.take_event(ecode)) return null;
