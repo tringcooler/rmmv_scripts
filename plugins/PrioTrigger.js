@@ -37,14 +37,14 @@ var prio_trigger = (function() {
         return true;
     };
     
-    prio_trigger.prototype._sw_stat = function(event, key, set = null) {
-        if(!this._prio_trigger_switches) {
-            this._prio_trigger_switches = {};
+    var sw_stat = function(event, key, set = null) {
+        if(!event._prio_trigger_switches) {
+            event._prio_trigger_switches = {};
         }
         if(set !== null) {
-            this._prio_trigger_switches[key] = !!set;
+            event._prio_trigger_switches[key] = set;
         }
-        return !!this._prio_trigger_switches[key];
+        return event._prio_trigger_switches[key];
     };
     
     var _parse_trigger = function(page) {
@@ -62,11 +62,13 @@ var prio_trigger = (function() {
             if(!_o_ev_mt_condi.call(this, page)) return false;
             var [key, prio] = _parse_trigger(page);
             if(!key) return true;
-            if(self._sw_stat(this, key)) return true;
+            if(sw_stat(this, key)) return true;
             var trig = self._is_triggered(key, prio);
             if(!trig) return false;
             if(trig.sw !== null) {
-                self._sw_stat(this, key, trig.sw);
+                sw_stat(this, key, trig.sw);
+            } else {
+                sw_stat(this, key, 'once');
             }
             return true;
         };
@@ -91,6 +93,12 @@ var prio_trigger = (function() {
                 var key = plugin_util.gval(args.shift());
                 this.emit(key, sw);
                 $gameMap.requestRefresh();
+            } else if(command == '@trigger') {
+                var ev = $gameMap._events[interp._eventId];
+                var key = plugin_util.gval(args.shift());
+                if(sw_stat(ev, key) == 'once') {
+                    sw_stat(ev, key, false);
+                }
             }
         });
     };
