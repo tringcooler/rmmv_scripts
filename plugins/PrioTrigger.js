@@ -8,7 +8,7 @@ var prio_trigger = (function() {
         this._hook_map_refresh();
     }
     
-    prio_trigger.prototype.emit = function(key, prio, sw = null) {
+    prio_trigger.prototype.emit = function(key, sw = null) {
         this._trig_seq.push({
             key: key,
             sw: sw,
@@ -34,7 +34,7 @@ var prio_trigger = (function() {
         if(trig.prio_seq.length <= 0) {
             this._trig_seq.shift();
         }
-        return this._trig_seq.length > 0;
+        return true;
     };
     
     prio_trigger.prototype._sw_stat = function(event, key, set = null) {
@@ -52,7 +52,7 @@ var prio_trigger = (function() {
         if(!line || line.code != 356 || !line.parameters[0]) return [];
         var cmds = line.parameters[0].split(' ');
         if(cmds[0] != '@trigger') return [];
-        return [cmds[0], cmds[1] || 0];
+        return [cmds[1], cmds[2] || 0];
     };
     
     prio_trigger.prototype._hook_ev_condi = function() {
@@ -83,14 +83,14 @@ var prio_trigger = (function() {
         };
     };
     
-    label_rebinder.prototype._hook_plugin = function() {
+    prio_trigger.prototype._hook_plugin = function() {
         plugin_util.hook((command, args, interp) => {
             if(command == 'pt_emit') {
                 var sw = (args[0] == 'on') ? true : (args[0] == 'off') ? false : null;
                 if(sw !== null) args.shift();
                 var key = plugin_util.gval(args.shift());
-                var prio = plugin_util.gval(args.shift());
-                this.emit(key, prio, sw);
+                this.emit(key, sw);
+                $gameMap.requestRefresh();
             }
         });
     };
