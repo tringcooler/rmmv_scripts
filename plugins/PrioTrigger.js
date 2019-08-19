@@ -5,7 +5,7 @@ var prio_trigger = (function() {
         this._trig_seq = [];
         this._hook_plugin();
         this._hook_ev_condi();
-        this._hook_map_refresh();
+        this._hook_map_setup_event();
     }
     
     prio_trigger.prototype.emit = function(key, sw = null) {
@@ -74,14 +74,17 @@ var prio_trigger = (function() {
         };
     };
     
-    prio_trigger.prototype._hook_map_refresh = function() {
-        var _o_map_refresh = Game_Map.prototype.refresh;
+    prio_trigger.prototype._hook_map_setup_event = function() {
+        var _o_ma_setup_event = Game_Map.prototype.setupStartingMapEvent;
         var self = this;
-        Game_Map.prototype.refresh = function(page) {
-            _o_map_refresh.call(this);
-            if(self._next_prio()) {
-                this.requestRefresh();
+        Game_Map.prototype.setupStartingMapEvent = function() {
+            if(!self._is_executed) {
+                if(self._next_prio()) {
+                    this.requestRefresh();
+                }
             }
+            self._is_executed = false;
+            _o_ma_setup_event.call(this);
         };
     };
     
@@ -99,6 +102,7 @@ var prio_trigger = (function() {
                 if(sw_stat(ev, key) == 'once') {
                     sw_stat(ev, key, false);
                 }
+                this._is_executed = true;
             }
         });
     };
