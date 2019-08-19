@@ -41,17 +41,25 @@ var prio_trigger = (function() {
             event._prio_trigger_switches = {};
         }
         if(set !== null) {
-            event._prio_trigger_switches[key] = set;
+            event._prio_trigger_switches.key = key;
+            event._prio_trigger_switches.stat = set;
+            return set;
         }
-        return event._prio_trigger_switches[key];
+        if(event._prio_trigger_switches.key != key) return undefined;
+        return event._prio_trigger_switches.stat;
     };
     
     var _parse_trigger = function(page) {
         var line = page.list[0];
         if(!line || line.code != 356 || !line.parameters[0]) return [];
         var cmds = line.parameters[0].split(' ');
-        if(cmds[0] != '@trigger') return [];
-        return [cmds[1], parseInt(cmds[2] || 0)];
+        if(cmds.shift() != '@trigger') return [];
+        var sw = false;
+        if(cmds[0] == 'sw') {
+            sw = true;
+            cmds.shift();
+        }
+        return [cmds[0], parseInt(cmds[1] || 0), sw];
     };
     
     prio_trigger.prototype._hook_ev_condi = function() {
@@ -59,8 +67,11 @@ var prio_trigger = (function() {
         var self = this;
         Game_Event.prototype.meetsConditions = function(page) {
             if(!_o_ev_mt_condi.call(this, page)) return false;
-            var [key, prio] = _parse_trigger(page);
+            var [key, prio, sw] = _parse_trigger(page);
             if(!key) return true;
+            if(sw && self._trig_seq[0] && self._trig_seq[0].key == '@empty') {
+                sw_stat(this, '@empty', true);
+            }
             var sw_st = sw_stat(this, key);
             if(typeof sw_st == 'boolean') {
                 if(sw_st === false && self._trig_seq.length <= 0) {
@@ -68,7 +79,11 @@ var prio_trigger = (function() {
                 }
                 return sw_st;
             }
-            return self._is_triggered(key, prio);
+            var r = self._is_triggered(key, prio);
+            if(r && sw) {
+                sw_stat(this, key, true);
+            }
+            return r;
         };
     };
     
@@ -98,7 +113,9 @@ var prio_trigger = (function() {
                 if(sw) args.shift();
                 var ev = $gameMap._events[interp._eventId];
                 var key = plugin_util.gval(args.shift());
-                sw_stat(ev, key, sw);
+                if(!sw) {
+                    sw_stat(ev, key, false);
+                }
                 this._is_executed = true;
             }
         });
