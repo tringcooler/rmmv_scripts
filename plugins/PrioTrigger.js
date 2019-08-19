@@ -108,6 +108,13 @@ var prio_trigger = (function() {
                 this.emit(key);
                 $gameMap.requestRefresh();
                 this._is_executed = true;
+            } else if(command == 'pt_switch') {
+                var key = plugin_util.gval(args.shift());
+                var evid = plugin_util.gval(args.shift());
+                if(!(evid >= 0)) evid = interp._eventId;
+                var ev = $gameMap._events[evid];
+                sw_stat(ev, key, true);
+                $gameMap.requestRefresh();
             } else if(command == '@trigger') {
                 var sw = (args[0] == 'sw');
                 if(sw) args.shift();
