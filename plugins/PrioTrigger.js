@@ -95,16 +95,16 @@ var prio_trigger = (function() {
         var _o_ma_setup_event = Game_Map.prototype.setupStartingEvent;
         var self = this;
         Game_Map.prototype.setupStartingEvent = function() {
-            if(self._is_break) {
-                self._break();
-                this.requestRefresh();
-            } else if(!self._is_executed) {
-                if(self._next_prio()) {
+            if(!self._is_executed) {
+                if(self._is_break) {
+                    self._break();
+                    this.requestRefresh();
+                    self._is_break = false;
+                } else if(self._next_prio()) {
                     this.requestRefresh();
                 }
             }
             self._is_executed = false;
-            self._is_break = false;
             return _o_ma_setup_event.call(this);
         };
     };
