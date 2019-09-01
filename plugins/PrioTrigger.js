@@ -5,7 +5,7 @@ var prio_trigger = (function() {
         this._trig_seq = [];
         this._hook_plugin();
         this._hook_ev_condi();
-        this._hook_map_setup_event();
+        this._hook_map_upd_interp();
     }
     
     prio_trigger.prototype.emit = function(key) {
@@ -91,21 +91,40 @@ var prio_trigger = (function() {
         };
     };
     
-    prio_trigger.prototype._hook_map_setup_event = function() {
-        var _o_ma_setup_event = Game_Map.prototype.setupStartingEvent;
+    prio_trigger.prototype._update_prio = function(gmap) {
+        if(this._is_break) {
+            this._break();
+            gmap.requestRefresh();
+        } else if(!this._is_executed) {
+            if(this._next_prio()) {
+                gmap.requestRefresh();
+            }
+        }
+        this._is_executed = false;
+        this._is_break = false;
+    };
+    
+    prio_trigger.prototype._hook_map_upd_interp = function() {
+        var _o_map_upd_interp = Game_Map.prototype.updateInterpreter;
         var self = this;
-        Game_Map.prototype.setupStartingEvent = function() {
-            if(self._is_break) {
-                self._break();
-                this.requestRefresh();
-            } else if(!self._is_executed) {
-                if(self._next_prio()) {
-                    this.requestRefresh();
+        Game_Map.prototype.updateInterpreter = function() {
+            for (;;) {
+                if (this._interpreter.isRunning()) {
+                    self._is_executed = true;
+                }
+                this._interpreter.update();
+                if (this._interpreter.isRunning()) {
+                    return;
+                }
+                if (this._interpreter.eventId() > 0) {
+                    this.unlockEvent(this._interpreter.eventId());
+                    this._interpreter.clear();
+                }
+                self._update_prio(this);
+                if (!this.setupStartingEvent()) {
+                    return;
                 }
             }
-            self._is_executed = false;
-            self._is_break = false;
-            return _o_ma_setup_event.call(this);
         };
     };
     
@@ -115,7 +134,6 @@ var prio_trigger = (function() {
                 var key = plugin_util.gval(args.shift());
                 this.emit(key);
                 $gameMap.requestRefresh();
-                this._is_executed = true;
             } else if(command == 'pt_break') {
                 this._is_break = true;
             } else if(command == 'pt_switch') {
@@ -133,7 +151,6 @@ var prio_trigger = (function() {
                 if(!sw) {
                     sw_stat(ev, key, false);
                 }
-                this._is_executed = true;
             }
         });
     };
