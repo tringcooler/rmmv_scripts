@@ -11,7 +11,7 @@ var prio_trigger = (function() {
     prio_trigger.prototype.emit = function(key) {
         this._trig_seq.push({
             key: key,
-            prio_seq : [0],
+            prio_seq : [-Infinity],
         });
     };
     
@@ -23,7 +23,7 @@ var prio_trigger = (function() {
         var trig = this._trig_seq[0];
         if(!trig || key != trig.key) return false;
         if(prio == trig.prio_seq[0]) return true;
-        if(trig.prio_seq[0] == 0 && trig.prio_seq.indexOf(prio) < 0) {
+        if(trig.prio_seq[0] == -Infinity && trig.prio_seq.indexOf(prio) < 0) {
             trig.prio_seq.push(prio);
             trig.prio_seq.sort((a, b) => a - b);
         }
